@@ -22,6 +22,7 @@ from flax import linen
 import jax
 import jax.numpy as jnp
 
+from brax.training.spectral_norm import SpectralNorm
 
 @dataclasses.dataclass
 class FeedForwardModel:
@@ -36,6 +37,7 @@ class MLP(linen.Module):
   kernel_init: Callable[..., Any] = jax.nn.initializers.lecun_uniform()
   activate_final: bool = False
   bias: bool = True
+  spectral_norm: bool = False
 
   @linen.compact
   def __call__(self, data: jnp.ndarray):
@@ -47,6 +49,8 @@ class MLP(linen.Module):
           kernel_init=self.kernel_init,
           use_bias=self.bias)(
               hidden)
+      if self.spectral_norm:
+        hidden = SpectralNorm()(hidden)
       if i != len(self.layer_sizes) - 1 or self.activate_final:
         hidden = self.activation(hidden)
     return hidden
@@ -55,6 +59,7 @@ class MLP(linen.Module):
 def make_model(layer_sizes: Sequence[int],
                obs_size: int,
                activation: Callable[[jnp.ndarray], jnp.ndarray] = linen.swish,
+               spectral_norm: bool = False,
                ) -> FeedForwardModel:
   """Creates a model.
 
@@ -66,7 +71,7 @@ def make_model(layer_sizes: Sequence[int],
   Returns:
     a model
   """
-  module = MLP(layer_sizes=layer_sizes, activation=activation)
+  module = MLP(layer_sizes=layer_sizes, activation=activation, spectral_norm=spectral_norm)
   dummy_obs = jnp.zeros((1, obs_size))
   return FeedForwardModel(
       init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
