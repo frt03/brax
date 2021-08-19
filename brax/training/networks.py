@@ -75,7 +75,7 @@ def make_model(layer_sizes: Sequence[int],
   dummy_obs = jnp.zeros((1, obs_size))
   if spectral_norm:
     return FeedForwardModel(
-        init=lambda rng1, rng2: module.init({'params': rng1, 'singular_vector': rng2}, dummy_obs), apply=module.apply)
+        init=lambda rng1, rng2: module.init({'params': rng1, 'sing_vec': rng2}, dummy_obs), apply=module.apply)
   else:
     return FeedForwardModel(
         init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
