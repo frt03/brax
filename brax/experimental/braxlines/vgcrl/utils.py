@@ -130,7 +130,7 @@ class Discriminator(object):
       rng1, rng2, rng3 = jax.random.split(rng, 3)
       model_params = model.init(rng1, rng2)
       self.model = model
-      self.q_fn = lambda params, x: (model.apply(params, x, rngs={'sing_vec': rng3}),)
+      self.q_fn = lambda params, x: (model.apply(params, x, rngs={'sing_vec': rng3}, mutable=['sing_vec']),)
     elif q_fn == 'indexing_mlp_s':
       indices = q_fn_params.get('indices')
       output_size = q_fn_params.get('output_size')
@@ -139,7 +139,7 @@ class Discriminator(object):
       model_params = model.init(rng1, rng2)
       self.model = model
       q_fn_apply = lambda x: x.take(indices, axis=-1)
-      self.q_fn = lambda params, x: (model.apply(params, q_fn_apply(x), rngs={'sing_vec': rng3}),)
+      self.q_fn = lambda params, x: (model.apply(params, q_fn_apply(x), rngs={'sing_vec': rng3}, mutable=['sing_vec']),)
     else:
       raise NotImplementedError(q_fn)
     self.initialized = True
