@@ -159,6 +159,8 @@ class Discriminator(object):
       dist_params = self.q_fn(param, data)[0]
     else:
       dist_params = self.q_fn(param, data)
+    print(self.spectral_norm)
+    print(dist_params)
     return self.dist_q_fn(*dist_params)
 
   def sample_p_z(self, batch_size: int, rng: jnp.ndarray):
