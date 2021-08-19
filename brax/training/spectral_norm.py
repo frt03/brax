@@ -68,8 +68,8 @@ class SpectralNorm(Module):
       else:
         x = jnp.reshape(x, [-1, x.shape[-1]])
 
-    key = self.make_rng('stats')
-    u0_state = self.variable('stats', 'u0', initializers.normal(stddev=1.), key, (1, x.shape[-1]))
+    key = self.make_rng('singular_vector')
+    u0_state = self.variable('singular_vector', 'u0', initializers.normal(stddev=1.), key, (1, x.shape[-1]))
     u0 = u0_state.value
 
     # Power iteration for the weight's singular value.

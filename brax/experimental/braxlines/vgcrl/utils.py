@@ -127,14 +127,16 @@ class Discriminator(object):
       input_size = q_fn_params.get('input_size')
       output_size = q_fn_params.get('output_size')
       model = networks.make_model([32, 32, output_size], input_size, spectral_norm=True)
-      model_params = model.init(rng)
+      rng1, rng2 = jax.random.split(rng, 2)
+      model_params = model.init(rng1, rng2)
       self.model = model
       self.q_fn = lambda params, x: (model.apply(params, x),)
     elif q_fn == 'indexing_mlp_s':
       indices = q_fn_params.get('indices')
       output_size = q_fn_params.get('output_size')
       model = networks.make_model([32, 32, output_size], len(indices), spectral_norm=True)
-      model_params = model.init(rng)
+      rng1, rng2 = jax.random.split(rng, 2)
+      model_params = model.init(rng1, rng2)
       self.model = model
       q_fn_apply = lambda x: x.take(indices, axis=-1)
       self.q_fn = lambda params, x: (model.apply(params, q_fn_apply(x)),)

@@ -73,8 +73,12 @@ def make_model(layer_sizes: Sequence[int],
   """
   module = MLP(layer_sizes=layer_sizes, activation=activation, spectral_norm=spectral_norm)
   dummy_obs = jnp.zeros((1, obs_size))
-  return FeedForwardModel(
-      init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
+  if spectral_norm:
+    return FeedForwardModel(
+        init=lambda rng1, rng2: module.init({'params': rng1, 'singular_vector': rng2}, dummy_obs), apply=module.apply)
+  else:
+    return FeedForwardModel(
+        init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
 
 
 def make_models(policy_params_size: int,
