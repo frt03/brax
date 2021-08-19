@@ -57,9 +57,9 @@ class SpectralNorm(Module):
     x_shape = x.shape
 
     # Handle scalars.
-    if x.ndim <= 1:
+    if x.ndim <= 1 and len(x) == 1:
       raise ValueError("Spectral normalization is not well defined for "
-                       "scalar or vector inputs.")
+                       "scalar inputs.")
     # Handle higher-order tensors.
     elif x.ndim > 2:
       if error_on_non_matrix:
