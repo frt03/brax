@@ -156,7 +156,7 @@ class Discriminator(object):
     assert self.initialized, 'init_model() must be called'
     param = params.get(self.param_name, {})
     if self.spectral_norm:
-      dist_params = self.q_fn(param, data)[0]
+      dist_params = self.q_fn(param, data) #[0]
     else:
       dist_params = self.q_fn(param, data)
     print(self.spectral_norm)
