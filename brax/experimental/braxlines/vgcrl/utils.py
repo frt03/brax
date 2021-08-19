@@ -108,6 +108,7 @@ class Discriminator(object):
     if q_fn == 'indexing':
       indices = q_fn_params.get('indices')
       self.q_fn = lambda params, x: (x.take(indices, axis=-1),)
+      self.spectral_norm = False
     elif q_fn == 'mlp':
       input_size = q_fn_params.get('input_size')
       output_size = q_fn_params.get('output_size')
@@ -115,6 +116,7 @@ class Discriminator(object):
       model_params = model.init(rng)
       self.model = model
       self.q_fn = lambda params, x: (model.apply(params, x),)
+      self.spectral_norm = False
     elif q_fn == 'indexing_mlp':
       indices = q_fn_params.get('indices')
       output_size = q_fn_params.get('output_size')
@@ -123,6 +125,7 @@ class Discriminator(object):
       self.model = model
       q_fn_apply = lambda x: x.take(indices, axis=-1)
       self.q_fn = lambda params, x: (model.apply(params, q_fn_apply(x)),)
+      self.spectral_norm = False
     elif q_fn == 'mlp_s':
       input_size = q_fn_params.get('input_size')
       output_size = q_fn_params.get('output_size')
@@ -131,6 +134,7 @@ class Discriminator(object):
       model_params = model.init(rng1, rng2)
       self.model = model
       self.q_fn = lambda params, x: (model.apply(params, x, rngs={'sing_vec': rng3}, mutable=['sing_vec']),)
+      self.spectral_norm = True
     elif q_fn == 'indexing_mlp_s':
       indices = q_fn_params.get('indices')
       output_size = q_fn_params.get('output_size')
@@ -140,6 +144,7 @@ class Discriminator(object):
       self.model = model
       q_fn_apply = lambda x: x.take(indices, axis=-1)
       self.q_fn = lambda params, x: (model.apply(params, q_fn_apply(x), rngs={'sing_vec': rng3}, mutable=['sing_vec']),)
+      self.spectral_norm = True
     else:
       raise NotImplementedError(q_fn)
     self.initialized = True
@@ -150,7 +155,10 @@ class Discriminator(object):
                  params: Dict[str, Dict[str, jnp.ndarray]] = None):
     assert self.initialized, 'init_model() must be called'
     param = params.get(self.param_name, {})
-    dist_params = self.q_fn(param, data)
+    if self.spectral_norm:
+      dist_params = self.q_fn(param, data)[0]
+    else:
+      dist_params = self.q_fn(param, data)
     return self.dist_q_fn(*dist_params)
 
   def sample_p_z(self, batch_size: int, rng: jnp.ndarray):
