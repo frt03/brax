@@ -57,9 +57,12 @@ class SpectralNorm(Module):
     x_shape = x.shape
 
     # Handle scalars.
-    if x.ndim <= 1 and len(x) == 1:
-      raise ValueError("Spectral normalization is not well defined for "
-                       "scalar inputs.")
+    if x.ndim <= 1:
+      if len(x) == 1:
+        raise ValueError("Spectral normalization is not well defined for "
+                        "scalar inputs.")
+      else:
+        x = jnp.reshape(x, [1, x.shape[0]])
     # Handle higher-order tensors.
     elif x.ndim > 2:
       if error_on_non_matrix:
