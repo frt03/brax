@@ -127,19 +127,19 @@ class Discriminator(object):
       input_size = q_fn_params.get('input_size')
       output_size = q_fn_params.get('output_size')
       model = networks.make_model([32, 32, output_size], input_size, spectral_norm=True)
-      rng1, rng2 = jax.random.split(rng, 2)
+      rng1, rng2, rng3 = jax.random.split(rng, 3)
       model_params = model.init(rng1, rng2)
       self.model = model
-      self.q_fn = lambda params, x: (model.apply(params, x),)
+      self.q_fn = lambda params, x: (model.apply(params, x, rngs={'sing_vec': rng3}),)
     elif q_fn == 'indexing_mlp_s':
       indices = q_fn_params.get('indices')
       output_size = q_fn_params.get('output_size')
       model = networks.make_model([32, 32, output_size], len(indices), spectral_norm=True)
-      rng1, rng2 = jax.random.split(rng, 2)
+      rng1, rng2, rng3 = jax.random.split(rng, 3)
       model_params = model.init(rng1, rng2)
       self.model = model
       q_fn_apply = lambda x: x.take(indices, axis=-1)
-      self.q_fn = lambda params, x: (model.apply(params, q_fn_apply(x)),)
+      self.q_fn = lambda params, x: (model.apply(params, q_fn_apply(x), rngs={'sing_vec': rng3}),)
     else:
       raise NotImplementedError(q_fn)
     self.initialized = True
