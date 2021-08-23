@@ -8,7 +8,10 @@ from jax.nn import initializers
 import jax.numpy as jnp
 
 from flax import linen
+from flax.linen.initializers import lecun_normal, zeros
 
+
+default_kernel_init = lecun_normal()
 
 PRNGKey = Any
 Array = Any
