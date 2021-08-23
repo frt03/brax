@@ -58,9 +58,9 @@ class SNMLP:
     # wrapper for spectral normalization
     self.mlp = mlp
     self.layer_sizes: Sequence[int] = mlp.layer_sizes
-    self.spectral_normalization = [
-      SpectralNorm(dtype=jnp.float32, eps=1e-4, n_steps=1) for _ in range(len(self.layer_sizes))
-    ]
+    #self.spectral_normalization = [
+    #  SpectralNorm(dtype=jnp.float32, eps=1e-4, n_steps=1) for _ in range(len(self.layer_sizes))
+    #]
     self.idx = 0
 
   def init(self, rng, dummy_x):
@@ -69,11 +69,11 @@ class SNMLP:
     sn_params = []
     unfreezed_params = unfreeze(params)['params']
     self.idx = 0
-    for module_name, param_dict in unfreezed_params.items():
+    for _, param_dict in unfreezed_params.items():
       for k, v in param_dict.items():
         if k == 'kernel':
           sn_params.append(
-            self.spectral_normalization[self.idx].init(
+            SpectralNorm(dtype=jnp.float32, eps=1e-4, n_steps=1).init(
               {'params': rngs[self.idx+1], 'sing_vec': rngs[self.idx+len(self.layer_sizes)]},
               v
             )
@@ -93,7 +93,7 @@ class SNMLP:
       for k, v in param_dict.items():
         def apply_sn_to_kernel(k, v):
           if k == 'kernel':
-            applied_v, self.sn_params[self.idx] = self.spectral_normalization[self.idx].apply(
+            applied_v, self.sn_params[self.idx] = SpectralNorm(dtype=jnp.float32, eps=1e-4, n_steps=1).apply(
               self.sn_params[self.idx], v,
               rngs={'sing_vec': rngs[self.idx+1]}, mutable=['sing_vec']
             )
