@@ -23,7 +23,7 @@ from flax.core import freeze, unfreeze
 import jax
 import jax.numpy as jnp
 
-from brax.training.spectral_norm import SpectralNorm
+from brax.training.spectral_norm import SpectralNorm, SNDense
 
 @dataclasses.dataclass
 class FeedForwardModel:
@@ -44,6 +44,28 @@ class MLP(linen.Module):
     hidden = data
     for i, hidden_size in enumerate(self.layer_sizes):
       hidden = linen.Dense(
+          hidden_size,
+          name=f'hidden_{i}',
+          kernel_init=self.kernel_init,
+          use_bias=self.bias)(
+              hidden)
+      if i != len(self.layer_sizes) - 1 or self.activate_final:
+        hidden = self.activation(hidden)
+    return hidden
+
+class MLP2(linen.Module):
+  """MLP module."""
+  layer_sizes: Sequence[int]
+  activation: Callable[[jnp.ndarray], jnp.ndarray] = linen.relu
+  kernel_init: Callable[..., Any] = jax.nn.initializers.lecun_uniform()
+  activate_final: bool = False
+  bias: bool = True
+
+  @linen.compact
+  def __call__(self, data: jnp.ndarray):
+    hidden = data
+    for i, hidden_size in enumerate(self.layer_sizes):
+      hidden = SNDense(
           hidden_size,
           name=f'hidden_{i}',
           kernel_init=self.kernel_init,
@@ -122,10 +144,15 @@ def make_model(layer_sizes: Sequence[int],
   Returns:
     a model
   """
-  mlp = MLP(layer_sizes=layer_sizes, activation=activation)
-  module = SNMLP(mlp=mlp) if spectral_norm else mlp
+  mlp = MLP2 if spectral_norm else MLP
+  module = mlp(layer_sizes=layer_sizes, activation=activation)
+  # module = SNMLP(mlp=mlp) if spectral_norm else mlp
   dummy_obs = jnp.zeros((1, obs_size))
-  return FeedForwardModel(
+  if spectral_norm:
+    return FeedForwardModel(
+        init=lambda rng1, rng2: module.init({'params': rng1, 'sing_vec': rng2}, dummy_obs), apply=module.apply)
+  else:
+    return FeedForwardModel(
         init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
 
 
