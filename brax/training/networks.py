@@ -19,6 +19,7 @@ from typing import Any, Callable, Sequence, Tuple
 
 import dataclasses
 from flax import linen
+from flax.core import freeze, unfreeze
 import jax
 import jax.numpy as jnp
 
@@ -37,7 +38,6 @@ class MLP(linen.Module):
   kernel_init: Callable[..., Any] = jax.nn.initializers.lecun_uniform()
   activate_final: bool = False
   bias: bool = True
-  spectral_norm: bool = False
 
   @linen.compact
   def __call__(self, data: jnp.ndarray):
@@ -49,12 +49,63 @@ class MLP(linen.Module):
           kernel_init=self.kernel_init,
           use_bias=self.bias)(
               hidden)
-      if self.spectral_norm:
-        hidden = SpectralNorm()(hidden)
       if i != len(self.layer_sizes) - 1 or self.activate_final:
         hidden = self.activation(hidden)
     return hidden
 
+class SNMLP:
+  def __init__(self, mlp: Any):
+    # wrapper for spectral normalization
+    self.mlp = mlp
+    self.layer_sizes: Sequence[int] = mlp.layer_sizes
+    self.spectral_normalization = [
+      SpectralNorm(dtype=jnp.float32, eps=1e-4, n_steps=1) for _ in range(len(self.layer_sizes))
+    ]
+    self.idx = 0
+
+  def init(self, rng, dummy_x):
+    rngs = jax.random.split(rng, len(self.layer_sizes)*2 + 1)
+    params = self.mlp.init(rngs[0], dummy_x)
+    sn_params = []
+    unfreezed_params = unfreeze(params)['params']
+    self.idx = 0
+    for module_name, param_dict in unfreezed_params.items():
+      for k, v in param_dict.items():
+        if k == 'kernel':
+          sn_params.append(
+            self.spectral_normalization[self.idx].init(
+              {'params': rngs[self.idx+1], 'sing_vec': rngs[self.idx+len(self.layer_sizes)]},
+              v
+            )
+          )
+          self.idx += 1
+    self.idx = 0
+    self.sn_params = sn_params
+    return params
+
+  def apply(self, params, x, rng):
+    rngs = jax.random.split(rng, len(self.layer_sizes) + 1)
+    new_params = {}
+    unfreezed_params = unfreeze(params)['params']
+    self.idx = 0
+    for module_name, param_dict in unfreezed_params.items():
+      new_params[module_name] = {}
+      for k, v in param_dict.items():
+        def apply_sn_to_kernel(k, v):
+          if k == 'kernel':
+            applied_v, self.sn_params[self.idx] = self.spectral_normalization[self.idx].apply(
+              self.sn_params[self.idx], v,
+              rngs={'sing_vec': rngs[self.idx+1]}, mutable=['sing_vec']
+            )
+            self.idx += 1
+            return applied_v
+          elif k == 'bias':
+            return v
+        new_params[module_name][k] = apply_sn_to_kernel(k, v)
+    params = freeze({'params': new_params})
+    self.idx = 0
+    y = self.mlp.apply(params, x)
+    return y
 
 def make_model(layer_sizes: Sequence[int],
                obs_size: int,
@@ -71,13 +122,10 @@ def make_model(layer_sizes: Sequence[int],
   Returns:
     a model
   """
-  module = MLP(layer_sizes=layer_sizes, activation=activation, spectral_norm=spectral_norm)
+  mlp = MLP(layer_sizes=layer_sizes, activation=activation)
+  module = SNMLP(mlp=mlp) if spectral_norm else mlp
   dummy_obs = jnp.zeros((1, obs_size))
-  if spectral_norm:
-    return FeedForwardModel(
-        init=lambda rng1, rng2: module.init({'params': rng1, 'sing_vec': rng2}, dummy_obs), apply=module.apply)
-  else:
-    return FeedForwardModel(
+  return FeedForwardModel(
         init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
 
 
