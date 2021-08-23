@@ -77,8 +77,8 @@ class SpectralNorm(linen.Module):
       v0 = _l2_normalize(jnp.matmul(u0, w.transpose([1, 0])), eps=self.eps)
       u0 = _l2_normalize(jnp.matmul(v0, w), eps=self.eps)
 
-    u0 = lax.stop_gradient(u0)
-    v0 = lax.stop_gradient(v0)
+    # u0 = lax.stop_gradient(u0)
+    # v0 = lax.stop_gradient(v0)
 
     sigma = jnp.matmul(jnp.matmul(v0, w), jnp.transpose(u0))[0, 0]
 
