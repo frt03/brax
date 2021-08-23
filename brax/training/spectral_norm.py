@@ -70,6 +70,7 @@ class SpectralNorm(linen.Module):
 
     key = self.make_rng('sing_vec')
     u0 = self.variable('sing_vec', 'u0', initializers.normal(stddev=1.), key, (1, w.shape[-1]))
+    # u0_state = self.variable('sing_vec', 'u0', initializers.normal(stddev=1.), key, (1, w.shape[-1]))
     # u0 = u0_state.value
 
     # Power iteration for the weight's singular value.
@@ -87,7 +88,7 @@ class SpectralNorm(linen.Module):
     w /= sigma
     w_bar = w.reshape(w_shape)
 
-    if update_stats:
-      u0_state.value = u0
+    # if update_stats:
+      # u0_state.value = u0
 
     return w_bar.astype(self.dtype)
