@@ -85,7 +85,6 @@ class TransformerModel(linen.Module):
   num_heads: int
   dim_feedforward: int
   output_size: int
-  input_size: int
   dropout_rate: float = 0.5
   transformer_norm: bool = False
   condition_decoder: bool = False
