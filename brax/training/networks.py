@@ -15,7 +15,7 @@
 # python3
 """Network definitions."""
 
-from typing import Any, Callable, Sequence, Tuple
+from typing import Any, Callable, Optional, Sequence, Tuple
 
 import dataclasses
 from flax import linen
@@ -23,6 +23,7 @@ import jax
 import jax.numpy as jnp
 
 from brax.training.spectral_norm import SNDense
+from brax.experimental.braxlines.common.transformer_encoder import TransformerEncoder
 
 
 @dataclasses.dataclass
@@ -77,6 +78,42 @@ class SNMLP(linen.Module):
     return hidden
 
 
+class TransformerModel(linen.Module):
+  """Transformer Policy/Critic"""
+  num_layers: int
+  d_model: int
+  num_heads: int
+  dim_feedforward: int
+  output_size: int
+  dropout_rate: float = 0.5
+  transformer_norm: bool = False
+  condition_decoder: bool = False
+
+  @linen.compact
+  def __call__(self, data: jnp.ndarray):
+    # encoder
+    output = linen.Dense(
+      self.d_model,
+      kernel_init=jax.nn.initializers.uniform(scale=0.1),
+      bias_init=jax.nn.initializers.zeros())(
+        data) * jnp.sqrt(self.input_size)
+    output = TransformerEncoder(
+      num_layers=self.num_layers,
+      norm=linen.LayerNorm if self.transformer_norm else None,
+      d_model=self.d_model,
+      num_heads=self.num_heads,
+      dim_feedforward=self.dim_feedforward,
+      dropout_rate=self.dropout_rate)(output)
+    if self.condition_decoder:
+      output = jnp.concatenate([output, data], axis=-1)
+    # decoder
+    output = linen.Dense(
+      self.output_size,
+      kernel_init=jax.nn.initializers.uniform(scale=0.1),
+      bias_init=jax.nn.initializers.zeros())(data)
+    return output
+
+
 def make_model(layer_sizes: Sequence[int],
                obs_size: int,
                activation: Callable[[jnp.ndarray], jnp.ndarray] = linen.swish,
@@ -120,4 +157,63 @@ def make_models(policy_params_size: int,
   """
   policy_model = make_model([32, 32, 32, 32, policy_params_size], obs_size)
   value_model = make_model([256, 256, 256, 256, 256, 1], obs_size)
+  return policy_model, value_model
+
+
+def make_transformer(obs_size: int,
+                     output_size: int,
+                     num_layers: int = 3,
+                     d_model: int = 128,
+                     num_heads: int = 2,
+                     dim_feedforward: int = 256,
+                     dropout_rate: float = 0.0,
+                     transformer_norm: bool = True,
+                     condition_decoder: bool = False) -> FeedForwardModel:
+  """Creates a transformer model (https://arxiv.org/abs/2010.01856).
+
+  Args:
+    layer_sizes: layers
+    obs_size: size of an observation
+    output_size: size of an output (for policy)
+    num_layers: number of layers in TransformerEncoder
+    d_model: size of an input for TransformerEncoder
+    num_heads: number of heads in the multiheadattention
+    dim_feedforward: the dimension of the feedforward network model
+    dropout_rate: the dropout value
+    transformer_norm: whether to use a layer normalization
+    condition_decoder: whether to concat the features of the joint
+
+  Returns:
+    a model
+  """
+  dummy_obs = jnp.zeros((1, 1, obs_size))  # correct?
+  module = TransformerModel(
+    num_layers=num_layers,
+    d_model=d_model,
+    num_heads=num_heads,
+    dim_feedforward=dim_feedforward,
+    output_size=output_size,
+    dropout_rate=dropout_rate,
+    transformer_norm=transformer_norm,
+    condition_decoder=condition_decoder)
+  model = FeedForwardModel(
+        init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
+  return model
+
+
+def make_transformers(policy_params_size: int,
+                      obs_size: int
+                      ) -> Tuple[FeedForwardModel, FeedForwardModel]:
+  """Creates transformer models for policy and value functions.
+
+  Args:
+    policy_params_size: number of params that a policy network should generate
+    obs_size: size of an observation
+
+  Returns:
+    a model for policy and a model for value function
+  """
+  policy_model = make_transformer(
+    obs_size=obs_size, output_size=policy_params_size)
+  value_model = make_transformer(obs_size=obs_size, output_size=1)
   return policy_model, value_model
