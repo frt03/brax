@@ -31,6 +31,7 @@ class TransformerEncoderLayer(linen.Module):
   activation: Callable[[jnp.ndarray], jnp.ndarray] = linen.relu
   kernel_init: Callable[..., Any] = lecun_normal()
   bias_init: Callable[..., Any] = zeros
+  deterministic: bool = False if dropout_rate > 0.0 else True
 
   @linen.compact
   def __call__(
@@ -46,7 +47,9 @@ class TransformerEncoderLayer(linen.Module):
         use_bias=True,
         broadcast_dropout=False,
         dropout_rate=self.dropout_rate)(src, src, mask=src_mask)
-    src = src + linen.Dropout(rate=self.dropout_rate)(src2)
+    src = src + linen.Dropout(
+        rate=self.dropout_rate,
+        deterministic=self.deterministic)(src2)
     src = linen.LayerNorm(dtype=self.dtype)(src)
     src = linen.Dense(
         self.dim_feedforward,
@@ -54,13 +57,17 @@ class TransformerEncoderLayer(linen.Module):
         kernel_init=self.kernel_init,
         bias_init=self.bias_init)(src)
     src = self.activation(src)
-    src = linen.Dropout(rate=self.dropout_rate)(src)
+    src = linen.Dropout(
+        rate=self.dropout_rate,
+        deterministic=self.deterministic)(src)
     src2 = linen.Dense(
         self.d_model,
         dtype=self.dtype,
         kernel_init=self.kernel_init,
         bias_init=self.bias_init)(src)
-    src = src + linen.Dropout(rate=self.dropout_rate)(src2)
+    src = src + linen.Dropout(
+        rate=self.dropout_rate,
+        deterministic=self.deterministic)(src2)
     src = linen.LayerNorm(dtype=self.dtype)(src)
     return src
 
