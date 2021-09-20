@@ -51,20 +51,20 @@ class TransformerEncoderLayer(linen.Module):
         rate=self.dropout_rate,
         deterministic=self.deterministic)(src2)
     src = linen.LayerNorm(dtype=self.dtype)(src)
-    src = linen.Dense(
+    src2 = linen.Dense(
         self.dim_feedforward,
         dtype=self.dtype,
         kernel_init=self.kernel_init,
         bias_init=self.bias_init)(src)
-    src = self.activation(src)
-    src = linen.Dropout(
+    src2 = self.activation(src2)
+    src2 = linen.Dropout(
         rate=self.dropout_rate,
-        deterministic=self.deterministic)(src)
+        deterministic=self.deterministic)(src2)
     src2 = linen.Dense(
         self.d_model,
         dtype=self.dtype,
         kernel_init=self.kernel_init,
-        bias_init=self.bias_init)(src)
+        bias_init=self.bias_init)(src2)
     src = src + linen.Dropout(
         rate=self.dropout_rate,
         deterministic=self.deterministic)(src2)
