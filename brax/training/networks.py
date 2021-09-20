@@ -85,18 +85,20 @@ class TransformerModel(linen.Module):
   num_heads: int
   dim_feedforward: int
   output_size: int
+  input_size: int
   dropout_rate: float = 0.5
   transformer_norm: bool = False
   condition_decoder: bool = False
 
   @linen.compact
   def __call__(self, data: jnp.ndarray):
+    input_size = data.shape[-1]
     # encoder
     output = linen.Dense(
       self.d_model,
       kernel_init=jax.nn.initializers.uniform(scale=0.1),
       bias_init=linen.initializers.zeros)(
-        data) * jnp.sqrt(self.input_size)
+        data) * jnp.sqrt(input_size)
     output = TransformerEncoder(
       num_layers=self.num_layers,
       norm=linen.LayerNorm if self.transformer_norm else None,
