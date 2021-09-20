@@ -68,10 +68,10 @@ class TransformerEncoderLayer(linen.Module):
 class TransformerEncoder(linen.Module):
   """TransformerEncoder module."""
   num_layers: int
-  norm: Optional[Callable[..., Any]] = None
   d_model: int
   num_heads: int
   dim_feedforward: int
+  norm: Optional[Callable[..., Any]] = None
   dropout_rate: float = 0.1
   dtype: Any = jnp.float32
   qkv_features: Optional[int] = None
