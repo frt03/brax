@@ -15,7 +15,7 @@
 # python3
 """Network definitions."""
 
-from typing import Any, Callable, Optional, Sequence, Tuple
+from typing import Any, Callable, Sequence, Tuple
 
 import dataclasses
 from flax import linen
@@ -95,7 +95,7 @@ class TransformerModel(linen.Module):
     output = linen.Dense(
       self.d_model,
       kernel_init=jax.nn.initializers.uniform(scale=0.1),
-      bias_init=jax.nn.initializers.zeros())(
+      bias_init=linen.initializers.zeros)(
         data) * jnp.sqrt(self.input_size)
     output = TransformerEncoder(
       num_layers=self.num_layers,
@@ -110,7 +110,7 @@ class TransformerModel(linen.Module):
     output = linen.Dense(
       self.output_size,
       kernel_init=jax.nn.initializers.uniform(scale=0.1),
-      bias_init=jax.nn.initializers.zeros())(data)
+      bias_init=linen.initializers.zeros)(data)
     return output
 
 

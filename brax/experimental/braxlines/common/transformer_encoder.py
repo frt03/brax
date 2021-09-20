@@ -15,6 +15,7 @@
 """Transformer Encoder"""
 from typing import Any, Callable, Optional
 from flax import linen
+from flax.linen.initializers import lecun_normal, zeros
 import jax
 import jax.numpy as jnp
 
@@ -28,8 +29,8 @@ class TransformerEncoderLayer(linen.Module):
   dtype: Any = jnp.float32
   qkv_features: Optional[int] = None
   activation: Callable[[jnp.ndarray], jnp.ndarray] = linen.relu
-  kernel_init: Callable[..., Any] = jax.nn.initializers.lecun_uniform()
-  bias_init: Callable[..., Any] = jax.nn.initializers.zeros()
+  kernel_init: Callable[..., Any] = lecun_normal()
+  bias_init: Callable[..., Any] = zeros
 
   @linen.compact
   def __call__(
@@ -75,8 +76,8 @@ class TransformerEncoder(linen.Module):
   dtype: Any = jnp.float32
   qkv_features: Optional[int] = None
   activation: Callable[[jnp.ndarray], jnp.ndarray] = linen.relu
-  kernel_init: Callable[..., Any] = jax.nn.initializers.lecun_uniform()
-  bias_init: Callable[..., Any] = jax.nn.initializers.zeros()
+  kernel_init: Callable[..., Any] = lecun_normal()
+  bias_init: Callable[..., Any] = zeros
 
   @linen.compact
   def __call__(
