@@ -265,3 +265,29 @@ def get_obs_dict_shape(obs_dict: Union[Dict[str, jnp.ndarray], jnp.ndarray]):
     observer_shapes[k] = dict(shape=v.shape, start=i, end=i + v.shape[0])
     i += v.shape[0]
   return observer_shapes
+
+
+class ModularObserver(Observer):
+
+  def __init__(self, body_name, indices: Tuple[int] = None):
+      super().__init__(name=body_name, indices=indices)
+      self.body = body_name
+
+  def _get_obs(
+    self, 
+    sys, 
+    qp: brax.QP, 
+    info: brax.Info, 
+    cached_obs_dict: 
+    Dict[str, jnp.ndarray], 
+    component: Dict[str, Any]):
+    
+    indices, _, _ = sim_utils.names2indices(sys.config, self.body + '_' + component['suffix'], 'body')
+
+    b_qp = []
+    for type_ in ('pos', 'rot', 'vel', 'ang'):
+        for index in indices:
+            value = getattr(qp, type_)[index]
+            b_qp.append(value)
+
+    return jnp.concatenate(b_qp)
