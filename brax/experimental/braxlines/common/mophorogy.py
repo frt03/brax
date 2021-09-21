@@ -13,7 +13,9 @@
 # limitations under the License.
 
 """temporal functions. Need to refactor a lot."""
+import jax
 from jax import numpy as jnp
+
 from brax.envs import env
 
 
@@ -23,25 +25,23 @@ LIMB_DICT = {
       '$ Torso', 'Aux 1', '$ Body 4', 'Aux 2', '$ Body 7',
       'Aux 3', '$ Body 10', 'Aux 4', '$ Body 13'],
     'joints': {
-        'Aux 1': [(-30.0, 30.0), '$ Torso_Aux 1'],
-        '$ Body 4': [(30.0, 70.0), 'Aux 1_$ Body 4'],
-        'Aux 2': [(-30.0, 30.0), '$ Torso_Aux 2'],
-        '$ Body 7': [(-70.0, -30.0), 'Aux 2_$ Body 7'],
-        'Aux 3': [(-30.0, 30.0), '$ Torso_Aux 3'],
-        '$ Body 10': [(-70.0, -30.0), 'Aux 3_$ Body 10'],
-        'Aux 4': [(-30.0, 30.0), '$ Torso_Aux 4'],
-        '$ Body 13': [(30.0, 70.0), 'Aux 4_$ Body 13']}
-      },
+        'Aux 1': [[-30.0, 30.0], '$ Torso_Aux 1'],
+        '$ Body 4': [[30.0, 70.0], 'Aux 1_$ Body 4'],
+        'Aux 2': [[-30.0, 30.0], '$ Torso_Aux 2'],
+        '$ Body 7': [[-70.0, -30.0], 'Aux 2_$ Body 7'],
+        'Aux 3': [[-30.0, 30.0], '$ Torso_Aux 3'],
+        '$ Body 10': [[-70.0, -30.0], 'Aux 3_$ Body 10'],
+        'Aux 4': [[-30.0, 30.0], '$ Torso_Aux 4'],
+        '$ Body 13': [[30.0, 70.0], 'Aux 4_$ Body 13']}},
   'halfcheetah': {
       'bodies': ['torso', 'bthigh', 'bshin', 'bfoot', 'fthigh', 'fshin', 'ffoot'],
       'joints': {
-        'bthigh': (-29.793806076049805, 60.16056823730469),
-        'bshin': (-44.97718811035156, 44.97718811035156),
-        'bfoot': (-22.918312072753906, 44.97718811035156),
-        'fthigh': (-57.295780181884766, 40.1070442199707),
-        'fshin': (-68.75493621826172, 49.847328186035156),
-        'ffoot': (-28.647890090942383, 28.647890090942383)}
-      }
+        'bthigh': [-29.793806076049805, 60.16056823730469],
+        'bshin': [-44.97718811035156, 44.97718811035156],
+        'bfoot': [-22.918312072753906, 44.97718811035156],
+        'fthigh': [-57.295780181884766, 40.1070442199707],
+        'fshin': [-68.75493621826172, 49.847328186035156],
+        'ffoot': [-28.647890090942383, 28.647890090942383]}}
   }
 
 
@@ -91,7 +91,7 @@ def get_local_limb_states(
         limb_type_vec = jnp.array((0, 0, 0, 0))
       torso_x_pos = state.qp.pos[0][0]
       xpos = state.qp.pos[idx]
-      xpos[0] -= torso_x_pos
+      jax.ops.index_update(xpos, 0, xpos[0] - torso_x_pos)
       quat = state.qp.rot[idx]
       expmap = quat2expmap(quat)
       obs = jnp.concatenate(
@@ -128,7 +128,7 @@ def get_local_limb_states(
         limb_type_vec = jnp.array((0, 0, 0))
       torso_x_pos = state.qp.pos[0][0]
       xpos = state.qp.pos[idx]
-      xpos[0] -= torso_x_pos
+      jax.ops.index_update(xpos, 0, xpos[0] - torso_x_pos)
       quat = state.qp.rot[idx]
       expmap = quat2expmap(quat)
       obs = jnp.concatenate(
@@ -139,7 +139,7 @@ def get_local_limb_states(
           expmap,
           limb_type_vec])
       # include current joint angle and joint range as input
-      if b == 'torso':
+      if b == '$ Torso':
         angle = 0.0
         joint_range = [0.0, 0.0]
       else:
@@ -151,9 +151,8 @@ def get_local_limb_states(
         angle = (angle - joint_range[0]) / (joint_range[1] - joint_range[0])
         joint_range[0] = (180.0 + joint_range[0]) / 360.0
         joint_range[1] = (180.0 + joint_range[1]) / 360.0
-      obs = jnp.concatenate([obs, [angle], joint_range])
+      obs = jnp.concatenate([obs, jnp.array([angle]), jnp.array(joint_range)])
       return obs
 
-  local_limb_states = jnp.concatenate([_get_obs_per_limb(b) for b in LIMB_DICT[env_name]['bodies']])
-
+  local_limb_states = jnp.concatenate([_get_obs_per_limb(b, idx) for idx, b in enumerate(LIMB_DICT[env_name]['bodies'])])
   return local_limb_states
