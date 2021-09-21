@@ -163,9 +163,9 @@ def make_models(policy_params_size: int,
 
 def make_transformer(obs_size: int,
                      output_size: int,
-                     num_layers: int = 1,
+                     num_layers: int = 3,
                      d_model: int = 128,
-                     num_heads: int = 4,
+                     num_heads: int = 2,
                      dim_feedforward: int = 256,
                      dropout_rate: float = 0.0,
                      transformer_norm: bool = True,
@@ -216,5 +216,6 @@ def make_transformers(policy_params_size: int,
   """
   policy_model = make_transformer(
     obs_size=obs_size, output_size=policy_params_size)
-  value_model = make_transformer(obs_size=obs_size, output_size=1)
+  # value_model = make_transformer(obs_size=obs_size, output_size=1)
+  value_model = make_model([256, 256, 256, 256, 256, 1], obs_size)
   return policy_model, value_model
