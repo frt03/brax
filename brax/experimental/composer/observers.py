@@ -279,7 +279,8 @@ class ModularObserver(Observer):
                info: brax.Info,
                cached_obs_dict: Dict[str, jnp.ndarray],
                component: Dict[str, Any]):
-    indices, _, _ = sim_utils.names2indices(sys.config, self.body + '_' + component['suffix'], 'body')
+    indices, _, _ = sim_utils.names2indices(
+      sys.config, self.body + '_' + component['suffix'], 'body')
 
     b_qp = []
     for type_ in ('pos', 'rot', 'vel', 'ang'):
