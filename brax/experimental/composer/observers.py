@@ -286,8 +286,8 @@ class ModularObserver(Observer):
 
     b_qp = []
     for type_ in ('pos', 'rot', 'vel', 'ang'):
-        for index in indices:
-            value = getattr(qp, type_)[index]
-            b_qp.append(value)
+      for index in indices:
+        value = getattr(qp, type_)[index]
+        b_qp.append(value)
 
     return jnp.concatenate(b_qp)
