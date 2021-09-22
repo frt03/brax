@@ -25,24 +25,23 @@ class MorphAnt(Ant):
   """Trains an ant to run in the +x direction."""
 
   def _get_obs(self, qp: brax.QP, info: brax.Info) -> jnp.ndarray:
-      
     bodies = dict(self.sys.body_idx)
     if 'Ground' in bodies:
-        bodies.pop('Ground')
+      bodies.pop('Ground')
     indices = sim_utils.names2indices(self.sys.config, bodies, 'body')[0]
 
     obs_dict = {}
     for type_ in ('pos', 'rot', 'vel', 'ang'):
-        for index, body in zip(indices, bodies):
-            if not body in obs_dict:
-                obs_dict[body] = []
-            value = getattr(qp, type_)[index]
-            obs_dict[body].append(value)
-    
+      for index, body in zip(indices, bodies):
+        if not body in obs_dict:
+          obs_dict[body] = []
+        value = getattr(qp, type_)[index]
+        obs_dict[body].append(value)
+
     obs = []
     for body in sorted(bodies):
-        obs.append(jnp.concatenate(obs_dict[body]))
-    
+      obs.append(jnp.concatenate(obs_dict[body]))
+
     return jnp.vstack(obs)
 
   @property
