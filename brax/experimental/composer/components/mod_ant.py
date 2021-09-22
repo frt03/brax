@@ -24,15 +24,14 @@ COLLIDES = ('torso', '$ Body 4', '$ Body 7', '$ Body 10', '$ Body 13')
 ROOT = 'torso'
 
 DEFAULT_OBSERVERS = (
-    mo('torso'),
-    mo('Aux 1'),
-    mo('$ Body 4'),
-    mo('Aux 2'),
-    mo('$ Body 7'),
-    mo('Aux 3'),
-    mo('$ Body 10'),
-    mo('Aux 4'),
-    mo('$ Body 13')
+    mo('torso_Aux 1'),
+    mo('Aux 1_$ Body 4'),
+    mo('torso_Aux 2'),
+    mo('Aux 2_$ Body 7'),
+    mo('torso_Aux 3'),
+    mo('Aux 3_$ Body 10'),
+    mo('torso_Aux 4'),
+    mo('Aux 4_$ Body 13'),
 )
 
 

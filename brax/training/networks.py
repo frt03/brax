@@ -187,7 +187,7 @@ def make_transformer(obs_size: int,
   Returns:
     a model
   """
-  dummy_obs = jnp.zeros((1, 1, obs_size))  # correct?
+  dummy_obs = jnp.zeros((1,) + obs_size)  # correct?
   module = TransformerModel(
     num_layers=num_layers,
     d_model=d_model,

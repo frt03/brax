@@ -29,7 +29,6 @@ from brax.envs import reacher
 from brax.envs import reacherangle
 from brax.envs import ur5e
 from brax.envs import wrappers
-from brax.envs import m_ant
 from brax.envs.env import Env, State, Wrapper
 import gym
 
@@ -43,7 +42,6 @@ _envs = {
     'reacher': reacher.Reacher,
     'reacherangle': reacherangle.ReacherAngle,
     'ur5e': ur5e.Ur5e,
-    'm_ant': m_ant.MorphAnt
 }
 
 

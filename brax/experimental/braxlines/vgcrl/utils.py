@@ -19,6 +19,9 @@ See:
 """
 
 
+from brax.experimental.composer.composer import get_env_obs_dict_shape
+import collections
+from brax import envs
 import copy
 import functools
 from typing import Any, Callable, Dict, Optional, List, Tuple
@@ -38,6 +41,7 @@ tfp = tfp.substrates.jax
 tfd = tfp.distributions
 
 DISC_PARAM_NAME = 'vgcrl_disc_params'
+
 
 
 class Discriminator(object):
@@ -62,6 +66,10 @@ class Discriminator(object):
     assert obs_scale is not None
     self.z_size = z_size
     self.env_obs_size = env.observation_size
+    
+    # flatten the observation
+    
+
     self.model = None
     self.param_name = param_name
     self.q_fn_str = q_fn
@@ -73,7 +81,7 @@ class Discriminator(object):
     self.obs_scale = jnp.array(obs_scale or 1.) * jnp.ones(
         self.indexed_obs_size)
     self.normalize_fn = normalization.make_data_and_apply_fn(
-        [self.env_obs_size + self.z_size], self.normalize_obs)[1]
+        [self.env_obs_size + self.z_size], self.normalize_obs,)[1]
     self.spectral_norm = spectral_norm
     self.logits_clip_range = logits_clip_range
     self.nonnegative_reward = nonnegative_reward
@@ -160,6 +168,16 @@ class Discriminator(object):
       else:
         model_params = model.init(rng)
         self.q_fn = lambda params, x: (model.apply(params, self.index_obs(x)),)
+    elif q_fn == 'mha':
+      from flax import linen
+      input_size = q_fn_params.get('input_size')
+      output_size = q_fn_params.get('output_size')
+
+      self.model = linen.attention.SelfAttention(
+        num_heads=4,
+        qkv_features=32,
+        out_features=output_size
+      )
     else:
       raise NotImplementedError(q_fn)
     self.initialized = True
@@ -240,7 +258,7 @@ class ParameterizeWrapper(Env):
                obs_norm_reward_multiplier: float = 0.0,
                env_reward_multiplier: float = 0.0):
     self._environment = environment
-    self.action_repeat = self._environment.action_repeat
+    # self.action_repeat = self._environment.action_repeat
     if hasattr(self._environment, 'batch_size'):
       self.batch_size = self._environment.batch_size
     else:
@@ -251,6 +269,10 @@ class ParameterizeWrapper(Env):
     self.env_obs_size = self._environment.observation_size
     self.env_reward_multiplier = env_reward_multiplier
     self.obs_norm_reward_multiplier = obs_norm_reward_multiplier
+
+  @property
+  def unwrapped(self) -> Env:
+      return self._environment 
 
   def concat(
       self,
@@ -285,6 +307,9 @@ class ParameterizeWrapper(Env):
       assert z.shape[-1] == self.z_size, f'{z.shape}[-1] != {self.z_size}'
     return self.concat(state, z, replace_reward=False)
 
+  def split(self, obs):
+    return self.disc.split_obs(obs)
+
   def step(self,
            state: State,
            action: jnp.ndarray,
@@ -300,6 +325,108 @@ class ParameterizeWrapper(Env):
     _, z = self.disc.split_obs(state.obs)
     state = self._environment.step(state, action)
     return self.concat(state, z, replace_reward=False)
+
+
+def concat_obs(obs_dict: Dict[str, jnp.ndarray],
+               observer_shapes: Dict[str, Dict[str, Any]]) -> jnp.ndarray:
+  """Concatenate observation dictionary to a vector."""
+  return jnp.concatenate([
+      o.reshape(o.shape[:-1] + o.shape[:-len(s['shape'])] + s['shape'])
+      for o, s in zip(obs_dict.values(), observer_shapes.values())
+  ], axis=-1)
+
+
+def split_obs(
+    obs: jnp.ndarray,
+    observer_shapes: Dict[str, Dict[str, Any]]) -> Dict[str, jnp.ndarray]:
+  """Split observation vector to a dictionary."""
+  obs_leading_dims = obs.shape[:-1]
+  return collections.OrderedDict({
+      k: obs[..., v['start']:v['end']].reshape(obs_leading_dims + v['shape']) for (k, v) in observer_shapes.items()
+  })
+  
+
+class ConditionalModularWrapper(Env):
+
+  def __init__(self, env: ParameterizeWrapper):
+    self._env = env
+    self.sys = self._env.sys
+
+  @property
+  def observation_size(self) -> int:
+    """The size of the observation vector returned in step and reset."""
+    rng = jax.random.PRNGKey(0)
+    reset_state = self.reset(rng)
+    return reset_state.obs.shape[-2:] # avoid reporting batch dimensions
+
+  @property
+  def action_size(self) -> int:
+      return 1
+
+  def reset(self, rng: jnp.ndarray, z: jnp.ndarray = None) -> State:
+    state = self._env.reset(rng)
+    
+    state.info['truncation'] = jnp.expand_dims(state.info['truncation'], axis=-1)
+    return state.replace(
+      obs=self.from_parametrized(state),
+      reward=jnp.expand_dims(state.reward, axis=-1),
+      done=jnp.expand_dims(state.done, axis=-1)
+    )
+
+  def from_parametrized(self, state: State):
+    observation, z = self._env.split(state.obs)
+    obs_dict = split_obs(
+      observation,
+      get_env_obs_dict_shape(self._env.unwrapped.unwrapped) # TODO: better way around this. There could be many wrappers
+    )
+    modular_obs = []
+    for key in sorted(obs_dict.keys()):
+        o = jnp.concatenate([obs_dict[key], z], axis=-1)
+        o = jnp.expand_dims(o, obs_dict[key].ndim - 1)
+        modular_obs.append(o) # TODO: is this the correct way? temporary
+
+    return jnp.concatenate(modular_obs, axis=obs_dict[key].ndim - 1)
+
+  def to_parametrized(self, state: State):
+    obs = state.obs
+    observer_shapes = get_env_obs_dict_shape(self._env.unwrapped.unwrapped)
+
+    obs_dict = collections.OrderedDict({})
+    z = None
+    for index, key in enumerate(sorted(observer_shapes.keys())):
+        observation, z = self._env.split(obs[..., index, :])
+        obs_dict[key] = observation
+    
+    flattened = jnp.concatenate([value for value in obs_dict.values()], axis=-1)
+    
+    return jnp.concatenate([flattened, z], axis=-1)
+
+  def step(
+    self,
+    state: State,
+    action: jnp.ndarray,
+    normalizer_params: Dict[str, jnp.ndarray] = None,
+    params: Dict[str, Dict[str, jnp.ndarray]] = None) -> State:
+    
+    state.info['truncation'] = jnp.squeeze(state.info['truncation'])
+    
+    state = self._env.step(
+      state=state.replace(
+        obs=self.to_parametrized(state),
+        done=jnp.squeeze(state.done)
+      ),
+      action=jnp.squeeze(action),
+      normalizer_params=normalizer_params,
+      params=params
+    )
+
+    state.info['truncation'] = jnp.expand_dims(state.info['truncation'], axis=-1)
+
+    return state.replace(
+      obs=self.from_parametrized(state),
+      reward=jnp.expand_dims(state.reward, axis=-1),
+      done=jnp.expand_dims(state.done, axis=-1)  # to compute GAE?
+    )
 
 
 def disc_loss_fn(data: StepData,
@@ -327,6 +454,35 @@ def create_fn(env_name: str, wrapper_params: Dict[str, Any],
               **kwargs) -> Callable[..., Env]:
   """Returns a function that when called, creates an Env."""
   return functools.partial(create, env_name, wrapper_params, **kwargs)
+
+def wrap_if(
+  env: envs.Env,
+  episode_length: int = 1000,
+  action_repeat: int = 1,
+  auto_reset: bool = True,
+  batch_size: Optional[int] = None):
+  
+  if episode_length is not None:
+    env = envs.wrappers.EpisodeWrapper(env, episode_length, action_repeat)
+  if batch_size:
+    env = envs.wrappers.VectorWrapper(env, batch_size)
+  if auto_reset:
+    env = envs.wrappers.AutoResetWrapper(env)
+  
+  return env
+
+def create_modular(env_name: str, wrapper_params: Dict[str, Any], **kwargs) -> Env:
+  """Creates an Env with from a brax system with modularized observations"""
+  env = composer.create(env_name=env_name)
+  env = wrap_if(env, **kwargs)
+  env = ParameterizeWrapper(env, **wrapper_params)
+  return ConditionalModularWrapper(env)
+  # return wrap_if(env, **kwargs)
+
+def create_modular_fn(env_name: str, wrapper_params: Dict[str, Any],
+              **kwargs) -> Callable[..., Env]:
+  """Returns a function that when called, creates a modularized Env."""
+  return functools.partial(create_modular, env_name, wrapper_params, **kwargs)
 
 
 def create_disc_fn(algo_name: str,
@@ -392,6 +548,20 @@ def create_disc_fn(algo_name: str,
               logits_clip_range=logits_clip_range,
               spectral_norm=spectral_norm,
           ),
+      'morph_diayn_full': functools.partial(
+          Discriminator,
+          q_fn='mha',
+          z_size=diayn_num_skills,
+          obs_indices=obs_indices,
+          q_fn_params=dict(
+              input_size=observation_size,
+              output_size=diayn_num_skills,
+          ),
+          dist_p='UniformCategorial',
+          dist_q='Categorial',
+          logits_clip_range=logits_clip_range,
+          spectral_norm=spectral_norm,  
+      )
   }.get(algo_name, None)
   assert disc_fn, f'invalid algo_name: {algo_name}'
   disc_fn = functools.partial(disc_fn, obs_scale=scale, **kwargs)
