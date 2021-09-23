@@ -161,8 +161,7 @@ def make_models(policy_params_size: int,
   return policy_model, value_model
 
 
-def make_transformer(obs_size: int,
-                     output_size: int,
+def make_transformer(output_size: int,
                      num_layers: int = 3,
                      d_model: int = 128,
                      num_heads: int = 2,
@@ -187,7 +186,6 @@ def make_transformer(obs_size: int,
   Returns:
     a model
   """
-  dummy_obs = jnp.zeros((1,) + obs_size)  # correct?
   module = TransformerModel(
     num_layers=num_layers,
     d_model=d_model,
@@ -197,15 +195,15 @@ def make_transformer(obs_size: int,
     dropout_rate=dropout_rate,
     transformer_norm=transformer_norm,
     condition_decoder=condition_decoder)
-  model = FeedForwardModel(
-        init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
-  return model
+
+  return module
 
 
 def make_transformers(policy_params_size: int,
                       obs_size: int
                       ) -> Tuple[FeedForwardModel, FeedForwardModel]:
   """Creates transformer models for policy and value functions.
+     following https://arxiv.org/abs/2010.01856
 
   Args:
     policy_params_size: number of params that a policy network should generate
@@ -214,7 +212,39 @@ def make_transformers(policy_params_size: int,
   Returns:
     a model for policy and a model for value function
   """
-  policy_model = make_transformer(
-    obs_size=obs_size, output_size=policy_params_size)
-  value_model = make_transformer(obs_size=obs_size, output_size=1)
-  return policy_model, value_model
+  dummy_obs = jnp.zeros((1,) + obs_size)
+
+  def policy_model_fn():
+    class PolicyModule(linen.Module):
+      @linen.compact
+      def __call__(self, data: jnp.array):
+        output = make_transformer(
+          output_size=policy_params_size
+        )(data) # (B, L, P) P: number of distribution parameters
+        output = output.reshape(output.shape[:-2] + (-1, )) # shape: (B, L*P)
+        return output
+    
+    module = PolicyModule()
+    model = FeedForwardModel(
+          init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
+    return model
+
+  def value_model_fn(reducer=jnp.sum):
+    class ValueModule(linen.Module):
+      @linen.compact
+      def __call__(self, data: jnp.ndarray):
+        output = make_transformer(
+          output_size=1
+        )(data) # shape (B, L, 1)
+        output = jnp.squeeze(output) # shape (B, L)
+        
+        return reducer(output, axis=-1, keepdims=True) # shape (B, 1) TODO: sum or mean?
+
+    module = ValueModule()
+    
+    model = FeedForwardModel(
+          init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
+    
+    return model
+
+  return policy_model_fn(), value_model_fn()

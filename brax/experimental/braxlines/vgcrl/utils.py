@@ -314,11 +314,11 @@ class ParameterizeWrapper(Env):
            state: State,
            action: jnp.ndarray,
            normalizer_params: Dict[str, jnp.ndarray] = None,
-           params: Dict[str, Dict[str, jnp.ndarray]] = None) -> State:
+           extra_params: Dict[str, Dict[str, jnp.ndarray]] = None) -> State:
     """Run one timestep of the environment's dynamics."""
     _, z = self.disc.split_obs(state.obs)
     state = self._environment.step(state, action)
-    return self.concat(state, z, normalizer_params, params, replace_reward=True)
+    return self.concat(state, z, normalizer_params, extra_params, replace_reward=True)
 
   def step2(self, state: State, action: jnp.ndarray) -> State:
     """Run one timestep of the environment's dynamics."""
@@ -365,12 +365,8 @@ class ConditionalModularWrapper(Env):
 
   def reset(self, rng: jnp.ndarray, z: jnp.ndarray = None) -> State:
     state = self._env.reset(rng)
-    
-    state.info['truncation'] = jnp.expand_dims(state.info['truncation'], axis=-1)
     return state.replace(
       obs=self.from_parametrized(state),
-      reward=jnp.expand_dims(state.reward, axis=-1),
-      done=jnp.expand_dims(state.done, axis=-1)
     )
 
   def from_parametrized(self, state: State):
@@ -406,26 +402,19 @@ class ConditionalModularWrapper(Env):
     state: State,
     action: jnp.ndarray,
     normalizer_params: Dict[str, jnp.ndarray] = None,
-    params: Dict[str, Dict[str, jnp.ndarray]] = None) -> State:
-    
-    state.info['truncation'] = jnp.squeeze(state.info['truncation'])
-    
+    extra_params: Optional[Dict[str, Dict[str, jnp.ndarray]]] = None) -> State:
+       
     state = self._env.step(
       state=state.replace(
         obs=self.to_parametrized(state),
-        done=jnp.squeeze(state.done)
       ),
-      action=jnp.squeeze(action),
+      action=action,
       normalizer_params=normalizer_params,
-      params=params
+      extra_params=extra_params
     )
-
-    state.info['truncation'] = jnp.expand_dims(state.info['truncation'], axis=-1)
 
     return state.replace(
       obs=self.from_parametrized(state),
-      reward=jnp.expand_dims(state.reward, axis=-1),
-      done=jnp.expand_dims(state.done, axis=-1)  # to compute GAE?
     )
 
 
