@@ -202,8 +202,8 @@ def make_transformer(output_size: int,
 def make_transformers(policy_params_size: int,
                       obs_size: int
                       ) -> Tuple[FeedForwardModel, FeedForwardModel]:
-  """Creates transformer models for policy and value functions.
-     following https://arxiv.org/abs/2010.01856
+  """Creates transformer models for policy and value functions,
+     following https://arxiv.org/abs/2010.01856.
 
   Args:
     policy_params_size: number of params that a policy network should generate
@@ -219,11 +219,15 @@ def make_transformers(policy_params_size: int,
       @linen.compact
       def __call__(self, data: jnp.array):
         output = make_transformer(
-          output_size=policy_params_size
+          output_size=policy_params_size,
+          num_layers=3,
+          d_model=128,
+          num_heads=2,
+          dim_feedforward=256,
         )(data) # (B, L, P) P: number of distribution parameters
         output = output.reshape(output.shape[:-2] + (-1, )) # shape: (B, L*P)
         return output
-    
+
     module = PolicyModule()
     model = FeedForwardModel(
           init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
@@ -234,17 +238,18 @@ def make_transformers(policy_params_size: int,
       @linen.compact
       def __call__(self, data: jnp.ndarray):
         output = make_transformer(
-          output_size=1
+          output_size=1,
+          num_layers=3,
+          d_model=128,
+          num_heads=2,
+          dim_feedforward=256,
         )(data) # shape (B, L, 1)
         output = jnp.squeeze(output) # shape (B, L)
-        
         return reducer(output, axis=-1, keepdims=True) # shape (B, 1) TODO: sum or mean?
 
     module = ValueModule()
-    
     model = FeedForwardModel(
           init=lambda rng: module.init(rng, dummy_obs), apply=module.apply)
-    
     return model
 
   return policy_model_fn(), value_model_fn()
