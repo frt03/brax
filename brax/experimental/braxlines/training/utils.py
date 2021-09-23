@@ -13,6 +13,11 @@
 # limitations under the License.
 
 """Training utilities."""
+from brax.envs.env import Env
+import functools
+from typing import Any, Callable, Dict
+from brax.experimental.braxlines.common.morphology import ModularWrapper
+from brax.experimental.composer import composer
 from jax import numpy as jnp
 
 
@@ -21,3 +26,11 @@ def zero_fn(params, obs: jnp.ndarray, rng: jnp.ndarray, action_size: int):
   del params, rng
   return jnp.zeros(obs.shape[:-1] + (action_size,))
 
+def create_modular(**kwargs) -> Env:
+  """Creates an Env with from a brax system with modularized observations"""
+  env = composer.create(**kwargs)
+  return ModularWrapper(env)
+
+def create_modular_fn(**kwargs) -> Callable[..., Env]:
+  """Returns a function that when called, creates a modularized Env."""
+  return functools.partial(create_modular, **kwargs)

@@ -18,10 +18,6 @@ See:
   VGCRL https://arxiv.org/abs/2106.01404
 """
 
-
-from brax.experimental.composer.composer import get_env_obs_dict_shape
-import collections
-from brax import envs
 import copy
 import functools
 from typing import Any, Callable, Dict, Optional, List, Tuple
@@ -33,6 +29,7 @@ from brax.experimental.composer import observers
 from brax.training import networks
 from brax.training import normalization
 from brax.training.ppo import StepData
+from brax.experimental.braxlines.common.morphology import ConditionalModularWrapper
 import jax
 import jax.numpy as jnp
 import tensorflow_probability as tfp
@@ -41,7 +38,6 @@ tfp = tfp.substrates.jax
 tfd = tfp.distributions
 
 DISC_PARAM_NAME = 'vgcrl_disc_params'
-
 
 
 class Discriminator(object):
@@ -327,97 +323,6 @@ class ParameterizeWrapper(Env):
     return self.concat(state, z, replace_reward=False)
 
 
-def concat_obs(obs_dict: Dict[str, jnp.ndarray],
-               observer_shapes: Dict[str, Dict[str, Any]]) -> jnp.ndarray:
-  """Concatenate observation dictionary to a vector."""
-  return jnp.concatenate([
-      o.reshape(o.shape[:-1] + o.shape[:-len(s['shape'])] + s['shape'])
-      for o, s in zip(obs_dict.values(), observer_shapes.values())
-  ], axis=-1)
-
-
-def split_obs(
-    obs: jnp.ndarray,
-    observer_shapes: Dict[str, Dict[str, Any]]) -> Dict[str, jnp.ndarray]:
-  """Split observation vector to a dictionary."""
-  obs_leading_dims = obs.shape[:-1]
-  return collections.OrderedDict({
-      k: obs[..., v['start']:v['end']].reshape(obs_leading_dims + v['shape']) for (k, v) in observer_shapes.items()
-  })
-  
-
-class ConditionalModularWrapper(Env):
-
-  def __init__(self, env: ParameterizeWrapper):
-    self._env = env
-    self.sys = self._env.sys
-
-  @property
-  def observation_size(self) -> int:
-    """The size of the observation vector returned in step and reset."""
-    rng = jax.random.PRNGKey(0)
-    reset_state = self.reset(rng)
-    return reset_state.obs.shape[-2:] # avoid reporting batch dimensions
-
-  @property
-  def action_size(self) -> int:
-      return 1
-
-  def reset(self, rng: jnp.ndarray, z: jnp.ndarray = None) -> State:
-    state = self._env.reset(rng)
-    return state.replace(
-      obs=self.from_parametrized(state),
-    )
-
-  def from_parametrized(self, state: State):
-    observation, z = self._env.split(state.obs)
-    obs_dict = split_obs(
-      observation,
-      get_env_obs_dict_shape(self._env.unwrapped.unwrapped) # TODO: better way around this. There could be many wrappers
-    )
-    modular_obs = []
-    for key in sorted(obs_dict.keys()):
-        o = jnp.concatenate([obs_dict[key], z], axis=-1)
-        o = jnp.expand_dims(o, obs_dict[key].ndim - 1)
-        modular_obs.append(o) # TODO: is this the correct way? temporary
-
-    return jnp.concatenate(modular_obs, axis=obs_dict[key].ndim - 1)
-
-  def to_parametrized(self, state: State):
-    obs = state.obs
-    observer_shapes = get_env_obs_dict_shape(self._env.unwrapped.unwrapped)
-
-    obs_dict = collections.OrderedDict({})
-    z = None
-    for index, key in enumerate(sorted(observer_shapes.keys())):
-        observation, z = self._env.split(obs[..., index, :])
-        obs_dict[key] = observation
-    
-    flattened = jnp.concatenate([value for value in obs_dict.values()], axis=-1)
-    
-    return jnp.concatenate([flattened, z], axis=-1)
-
-  def step(
-    self,
-    state: State,
-    action: jnp.ndarray,
-    normalizer_params: Dict[str, jnp.ndarray] = None,
-    extra_params: Optional[Dict[str, Dict[str, jnp.ndarray]]] = None) -> State:
-       
-    state = self._env.step(
-      state=state.replace(
-        obs=self.to_parametrized(state),
-      ),
-      action=action,
-      normalizer_params=normalizer_params,
-      extra_params=extra_params
-    )
-
-    return state.replace(
-      obs=self.from_parametrized(state),
-    )
-
-
 def disc_loss_fn(data: StepData,
                  udata: StepData,
                  rng: jnp.ndarray,
@@ -444,29 +349,11 @@ def create_fn(env_name: str, wrapper_params: Dict[str, Any],
   """Returns a function that when called, creates an Env."""
   return functools.partial(create, env_name, wrapper_params, **kwargs)
 
-def wrap_if(
-  env: envs.Env,
-  episode_length: int = 1000,
-  action_repeat: int = 1,
-  auto_reset: bool = True,
-  batch_size: Optional[int] = None):
-  
-  if episode_length is not None:
-    env = envs.wrappers.EpisodeWrapper(env, episode_length, action_repeat)
-  if batch_size:
-    env = envs.wrappers.VectorWrapper(env, batch_size)
-  if auto_reset:
-    env = envs.wrappers.AutoResetWrapper(env)
-  
-  return env
-
 def create_modular(env_name: str, wrapper_params: Dict[str, Any], **kwargs) -> Env:
   """Creates an Env with from a brax system with modularized observations"""
   env = composer.create(env_name=env_name)
-  env = wrap_if(env, **kwargs)
   env = ParameterizeWrapper(env, **wrapper_params)
   return ConditionalModularWrapper(env)
-  # return wrap_if(env, **kwargs)
 
 def create_modular_fn(env_name: str, wrapper_params: Dict[str, Any],
               **kwargs) -> Callable[..., Env]:

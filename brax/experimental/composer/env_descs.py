@@ -149,5 +149,12 @@ ENV_DESCS = {
             ),
             edges=dict(ant1__cheetah2=dict(collide_type=None),)),
     'mod_ant':
-        dict(components=dict(ant1=dict(component='mod_ant', pos=(0, 0, 0)),),),
+        dict(
+            components=dict(
+                ant1=dict(
+                    component='mod_ant', 
+                    pos=(0, 0, 0)
+                ),
+            ),
+        ),
 }
