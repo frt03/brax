@@ -91,7 +91,10 @@ def make_data_and_apply_fn(obs_size, normalize_observations=True,
                            apply_clipping=True):
   """Creates data and an apply function for the normalizer."""
   if normalize_observations:
-    # TODO: fix compatibility with single dim observations
+
+    if type(obs_size) is  int:
+      obs_size = (obs_size,)
+
     data = (jnp.zeros(()), jnp.zeros(obs_size), jnp.ones(obs_size))
     def apply_fn(params, obs, std_min_value=1e-6, std_max_value=1e6):
       normalization_steps, running_mean, running_variance = params
