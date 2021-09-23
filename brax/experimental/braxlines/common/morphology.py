@@ -19,8 +19,7 @@ import jax
 from jax import numpy as jnp
 
 from brax.envs.env import Env, State
-from brax.experimental.composer.composer import get_env_obs_dict_shape, create
-
+from brax.experimental.composer.composer import get_env_obs_dict_shape
 
 
 LIMB_DICT = {
@@ -158,7 +157,8 @@ def get_local_limb_states(
       obs = jnp.concatenate([obs, jnp.array([angle]), jnp.array(joint_range)])
       return obs
 
-  local_limb_states = jnp.concatenate([_get_obs_per_limb(b, idx) for idx, b in enumerate(LIMB_DICT[env_name]['bodies'])])
+  local_limb_states = jnp.concatenate(
+    [_get_obs_per_limb(b, idx) for idx, b in enumerate(LIMB_DICT[env_name]['bodies'])])
   return local_limb_states
 
 
@@ -177,7 +177,8 @@ def split_obs(
   """Split observation vector to a dictionary."""
   obs_leading_dims = obs.shape[:-1]
   return collections.OrderedDict({
-      k: obs[..., v['start']:v['end']].reshape(obs_leading_dims + v['shape']) for (k, v) in observer_shapes.items()
+    k: obs[..., v['start']:v['end']].reshape(
+      obs_leading_dims + v['shape']) for (k, v) in observer_shapes.items()
   })
 
 
@@ -200,28 +201,24 @@ class ModularWrapper(Env):
 
   def reset(self, rng: jnp.ndarray, z: jnp.ndarray = None) -> State:
     state = self._env.reset(rng)
-    return state.replace(
-      obs=self.from_vectorized(state.obs),
-    )
+    return state.replace(obs=self.from_vectorized(state.obs),)
 
   def from_vectorized(self, observation: jnp.array):
+    # TODO: better way around this. There could be many wrappers
     obs_dict = split_obs(
       observation,
-      get_env_obs_dict_shape(self._env.unwrapped.unwrapped) # TODO: better way around this. There could be many wrappers
+      get_env_obs_dict_shape(self._env.unwrapped.unwrapped)
     )
     modular_obs = []
     for key in sorted(obs_dict.keys()):
         modular_obs.append(jnp.expand_dims(obs_dict[key], obs_dict[key].ndim - 1))
-
     return jnp.concatenate(modular_obs, axis=obs_dict[key].ndim - 1)
 
   def to_vectorized(self, observation: jnp.array):
     observer_shapes = get_env_obs_dict_shape(self._env.unwrapped.unwrapped)
-
     obs_dict = collections.OrderedDict({})
     for index, key in enumerate(sorted(observer_shapes.keys())):
         obs_dict[key] = observation[..., index, :]
-        
     return jnp.concatenate([value for value in obs_dict.values()], axis=-1)
 
   def step(
@@ -230,52 +227,43 @@ class ModularWrapper(Env):
     action: jnp.ndarray,
     normalizer_params: Dict[str, jnp.ndarray] = None,
     extra_params: Optional[Dict[str, Dict[str, jnp.ndarray]]] = None) -> State:
-       
     state = self._env.step(
       state=state.replace(
         obs=self.to_vectorized(state.obs),
       ),
       action=action,
     )
-
-    return state.replace(
-      obs=self.from_vectorized(state.obs),
-    )
+    return state.replace(obs=self.from_vectorized(state.obs),)
 
 
 class ConditionalModularWrapper(ModularWrapper):
 
   def reset(self, rng: jnp.ndarray, z: jnp.ndarray = None) -> State:
     state = self._env.reset(rng)
-    return state.replace(
-      obs=self.from_parametrized(state),
-    )
+    return state.replace(obs=self.from_parametrized(state),)
 
   def from_vectorized(self, observation: jnp.array):
     observation, z = self._env.split(observation)
+    # TODO: better way around this. There could be many wrappers
     obs_dict = split_obs(
       observation,
-      get_env_obs_dict_shape(self._env.unwrapped.unwrapped) # TODO: better way around this. There could be many wrappers
+      get_env_obs_dict_shape(self._env.unwrapped.unwrapped)
     )
     modular_obs = []
     for key in sorted(obs_dict.keys()):
         o = jnp.concatenate([obs_dict[key], z], axis=-1)
         o = jnp.expand_dims(o, obs_dict[key].ndim - 1)
         modular_obs.append(o) # TODO: is this the correct way? temporary
-
     return jnp.concatenate(modular_obs, axis=obs_dict[key].ndim - 1)
 
   def to_vectorized(self, observation: jnp.array):
     observer_shapes = get_env_obs_dict_shape(self._env.unwrapped.unwrapped)
-
     obs_dict = collections.OrderedDict({})
     z = None
     for index, key in enumerate(sorted(observer_shapes.keys())):
         observation, z = self._env.split(observation[..., index, :])
         obs_dict[key] = observation
-    
     flattened = jnp.concatenate([value for value in obs_dict.values()], axis=-1)
-    
     return jnp.concatenate([flattened, z], axis=-1)
 
   def step(
@@ -284,7 +272,6 @@ class ConditionalModularWrapper(ModularWrapper):
     action: jnp.ndarray,
     normalizer_params: Dict[str, jnp.ndarray] = None,
     extra_params: Optional[Dict[str, Dict[str, jnp.ndarray]]] = None) -> State:
-       
     state = self._env.step(
       state=state.replace(
         obs=self.to_vectorized(state.obs),
@@ -293,7 +280,4 @@ class ConditionalModularWrapper(ModularWrapper):
       normalizer_params=normalizer_params,
       extra_params=extra_params
     )
-
-    return state.replace(
-      obs=self.from_vectorized(state.obs),
-    )
+    return state.replace(obs=self.from_vectorized(state.obs),)
