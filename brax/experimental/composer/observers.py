@@ -289,17 +289,20 @@ class ModularObserver(Observer):
     Dict[str, jnp.ndarray], 
     component: Dict[str, Any]):
     
-    indices, _, _ = sim_utils.names2indices(sys.config, self.name + '_' + component['suffix'], self.type)
+    # indices, _, _ = sim_utils.names2indices(sys.config, self.name + '_' + component['suffix'], self.type)
 
-    b_qp = []
-    for type_ in ('pos', 'rot', 'vel', 'ang'):
-      for index in indices:
-        value = getattr(qp, type_)[index]
-        if type_ == 'pos':
-          value = value[2:] # remove xy position
-        b_qp.append(value)
+    # b_qp = []
+    # for type_ in ('pos', 'rot', 'vel', 'ang'):
+    #   for index in indices:
+    #     value = getattr(qp, type_)[index]
+    #     if type_ == 'pos':
+    #       value = value[2:] # remove xy position
+    #     b_qp.append(value)
 
-    return jnp.concatenate(b_qp)
+    _, joint_info, _ = sim_utils.names2indices(sys.config, f"{self.name}_{component['suffix']}", self.type)
+    joint_obs_dict = sim_utils.get_joint_value(sys, qp, joint_info)
+
+    return jnp.concatenate([v for k, v in joint_obs_dict.items()])
 
 def get_component_observers(component: Dict[str, Any],
                             observer_type: str = 'qp',
