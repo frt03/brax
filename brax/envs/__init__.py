@@ -27,6 +27,8 @@ from brax.envs import halfcheetah
 from brax.envs import hopper
 from brax.envs import humanoid
 from brax.envs import humanoid_standup
+from brax.envs import inverted_double_pendulum
+from brax.envs import inverted_pendulum
 from brax.envs import reacher
 from brax.envs import reacherangle
 from brax.envs import ur5e
@@ -34,6 +36,7 @@ from brax.envs import walker2d
 from brax.envs import wrappers
 from brax.envs.env import Env, State, Wrapper
 import gym
+
 
 _envs = {
     'ant': ant.Ant,
@@ -44,6 +47,8 @@ _envs = {
     'hopper': hopper.Hopper,
     'humanoid': humanoid.Humanoid,
     'humanoidstandup': humanoid_standup.HumanoidStandup,
+    'inverted_pendulum': inverted_pendulum.InvertedPendulum,
+    'inverted_double_pendulum': inverted_double_pendulum.InvertedDoublePendulum,
     'reacher': reacher.Reacher,
     'reacherangle': reacherangle.ReacherAngle,
     'ur5e': ur5e.Ur5e,
