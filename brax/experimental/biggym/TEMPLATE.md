@@ -17,16 +17,20 @@ The University of Tokyo, Google Brain
 
 ## Task Description
 In this task, HalfCheetah tries to jump higher and somersault. We call it cheetah_gallop task. Some agents can somersault successfully, but others fail to flip.
+
 ## Best Gif
 ![2021-08-26 11 27 51](https://user-images.githubusercontent.com/33809149/139874629-1f2c9e97-7f1e-453a-8ebb-f12dff707c77.gif)
+
 (This gif file will be posted on [Twitter](https://twitter.com/biggym2021). **We limit the file size to <5MB.**)
 
 ## Short Task Description (within 200 characters for tweet)
 cheetah_gallop task. HalfCheetah tries to jump and somersault.
+
 (This text file will be posted on [Twitter](https://twitter.com/biggym2021).)
 
 ## (Optional) Twitter handle
 @frt03_
+
 (This handle file will be posted on [Twitter](https://twitter.com/biggym2021).)
 
 ## Additional Video link
