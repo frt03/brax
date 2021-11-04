@@ -26,3 +26,5 @@ In this task, HalfCheetah tries to jump higher and somersault. We call it cheeta
 
 ## Additional Video link
 https://drive.google.com/drive/folders/1-uNAIybKhefmcQOFfD82iMLZKa-dnORr?usp=sharing
+
+(Link to additional videos, such as google drive, dropbox, youtube, etc.)
