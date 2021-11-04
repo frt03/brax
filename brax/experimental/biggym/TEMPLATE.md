@@ -24,15 +24,5 @@ In this task, HalfCheetah tries to jump higher and somersault. We call it cheeta
 
 (This gif file will be posted on [Twitter](https://twitter.com/biggym2021). **We limit the file size to <5MB.**)
 
-## Short Task Description (within 200 characters for tweet)
-cheetah_gallop task. HalfCheetah tries to jump and somersault.
-
-(This text file will be posted on [Twitter](https://twitter.com/biggym2021).)
-
-## (Optional) Twitter handle
-@frt03_
-
-(This handle file will be posted on [Twitter](https://twitter.com/biggym2021).)
-
 ## Additional Video link
 https://drive.google.com/drive/folders/1-uNAIybKhefmcQOFfD82iMLZKa-dnORr?usp=sharing
