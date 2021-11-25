@@ -38,7 +38,7 @@ def _in_jit() -> bool:
 def _which_np(*args):
   """Returns np or jnp depending on args."""
   for a in args:
-    if isinstance(a, jnp.ndarray):
+    if isinstance(a, jnp.ndarray) and not isinstance(a, onp.ndarray):
       return jnp
   return onp
 
@@ -193,6 +193,11 @@ def inv(a: ndarray) -> ndarray:
 def square(x: ndarray) -> ndarray:
   """Return the element-wise square of the input."""
   return _which_np(x).square(x)
+
+
+def tile(x: ndarray, reps: Union[Tuple[int, ...], int]) -> ndarray:
+  """Construct an array by repeating A the number of times given by reps."""
+  return _which_np(x).tile(x, reps)
 
 
 def repeat(a: ndarray, repeats: Union[int, ndarray]) -> ndarray:
@@ -385,3 +390,7 @@ def array(object: Any, dtype=None) -> ndarray:
     np = _which_np(object)  # object is not iterable (e.g. primitive type)
   return np.array(object, dtype)
 
+
+def abs(a: ndarray) -> ndarray:
+  """Calculate the absolute value element-wise."""
+  return _which_np(a).abs(a)
