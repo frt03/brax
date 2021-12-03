@@ -283,6 +283,72 @@ def add_squidgame(env_desc: Dict[str, Any],
   return env_desc
 
 
+def add_robosumo(
+    env_desc: Dict[str, Any],
+    ring_size: float = 3.0,
+    chase_scale: float = 1.,
+    knocking_scale: float = 1.,
+):
+  """Add a sumo task."""
+  agents = sorted(env_desc['components'])
+  agent_groups = {agent: {'reward_names': ()} for agent in agents}
+  components = {agent: {'reward_fns': {}} for agent in agents}
+  edges = {}
+  yokozuna, komusubis = agents[0], agents[1:]
+  for agent in komusubis:
+    edge_name = component_editor.concat_comps(agent, yokozuna)
+    edges[edge_name] = dict(
+        reward_fns=dict(
+            # komusubis aim to chase the yokozuna and vice versa
+            chase=dict(
+                reward_type='root_dist',
+                offset=2 * ring_size + 0.5,
+                scale=chase_scale),
+            # komusubis wants to push out yokozuna
+            # TODO: done_bonus
+            yoko_knocking=dict(
+                reward_type=reward_functions.exp_norm_reward,
+                obs=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
+                max_dist=ring_size,
+                done_bonus=2000,
+                scale=-knocking_scale,
+            ),
+            # yokozuna wants to push out komusubis
+            # TODO: done_bonus
+            komu_knocking=dict(
+                reward_type=reward_functions.exp_norm_reward,
+                obs=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
+                max_dist=ring_size,
+                done_bonus=2000,
+                scale=-knocking_scale,
+            ),
+        ))
+    agent_groups[agent]['reward_names'] += (('chase', agent, yokozuna),
+                                            ('yoko_knocking', agent, yokozuna))
+    agent_groups[yokozuna]['reward_names'] += (('chase', agent, yokozuna),
+                                               ('komu_knocking', agent, yokozuna))
+  for agent in agents:
+    components[agent]['reward_fns'].update(
+        dict(
+            control_penalty=dict(
+                reward_type=reward_functions.control_reward,
+            ),
+            draw_penalty=dict(
+                reward_type=reward_functions.constant_reward,
+                value=0.0,
+                done_bonus=-1000,
+            ),
+        ))
+    agent_groups[agent]['reward_names'] += (('control_penalty', agent),
+                                            ('draw_penalty', agent),)
+  # add sumo ring
+  components.update(get_ring_components(radius=ring_size, num_segments=20))
+  merge_desc(
+      env_desc,
+      dict(agent_groups=agent_groups, edges=edges, components=components))
+  return env_desc
+
+
 TASK_MAP = dict(
     follow=add_follow, chase=add_chase, sumo=add_sumo, squidgame=add_squidgame)
 

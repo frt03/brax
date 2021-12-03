@@ -90,6 +90,12 @@ def norm_reward(action: jnp.ndarray, obs_dict: Dict[str, jnp.ndarray],
   return distance_reward(action, obs_dict, obs1=obs, obs2=0, **kwargs)
 
 
+def exp_norm_reward(action: jnp.ndarray, obs_dict: Dict[str, jnp.ndarray],
+                obs: Observer, **kwargs):
+  """Exponential negative norm of an observation as reward."""
+  return jnp.exp(distance_reward(action, obs_dict, obs1=obs, obs2=0, **kwargs))
+
+
 def distance_reward(action: jnp.ndarray,
                     obs_dict: Dict[str, jnp.ndarray],
                     obs1: Union[Observer, jnp.ndarray],
@@ -98,6 +104,41 @@ def distance_reward(action: jnp.ndarray,
                     min_dist: float = 0,
                     norm_kwargs: Dict[str, Any] = None):
   """Negative distance reward."""
+  del action
+  norm_kwargs = norm_kwargs or {}
+  obs1 = index_obs_dict(obs_dict, obs1)
+  obs2 = index_obs_dict(obs_dict, obs2)
+  ndim = max(obs1.ndim, obs2.ndim)
+  obs1 = obs1.reshape((1,) * (ndim - obs1.ndim) + obs1.shape)
+  obs2 = obs2.reshape((1,) * (ndim - obs2.ndim) + obs2.shape)
+  delta = obs1 - obs2
+  dist = jnp.linalg.norm(delta, axis=-1, **norm_kwargs)
+  # instead of clipping, terminate
+  # dist = jnp.clip(dist, a_min=min_dist, a_max=max_dist)
+  done = jnp.zeros_like(dist)
+  done = jnp.where(dist < min_dist, x=jnp.ones_like(done), y=done)
+  done = jnp.where(dist > max_dist, x=jnp.ones_like(done), y=done)
+  return -dist, done
+
+
+def control_reward(action: jnp.ndarray,
+                   obs_dict: Dict[str, jnp.ndarray],
+                   value: float = 1.0):
+  """Negative Control reward."""
+  del obs_dict
+  reward = -jnp.linalg.norm(action, axis=-1) * value
+  return reward, jnp.zeros_like(reward)
+
+
+# TODO:
+def direction_reward(action: jnp.ndarray,
+                     obs_dict: Dict[str, jnp.ndarray],
+                     obs1: Union[Observer, jnp.ndarray],
+                     obs2: Union[Observer, jnp.ndarray],
+                     max_dist: float = 1e8,
+                     min_dist: float = 0,
+                     norm_kwargs: Dict[str, Any] = None):
+  """Positive direction reward."""
   del action
   norm_kwargs = norm_kwargs or {}
   obs1 = index_obs_dict(obs_dict, obs1)
