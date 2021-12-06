@@ -291,6 +291,7 @@ def add_robosumo(
     control_scale: float = 1.,
     opp_scale: float = 1.,
     win_bonus: float = 0.,
+    centering_scale: float = 1.,
 ):
   """Add a sumo task."""
   agents = sorted(env_desc['components'])
@@ -360,9 +361,17 @@ def add_robosumo(
                 reward_type=reward_functions.constant_reward,
                 value=-draw_scale,
             ),
+            # each agent aims to be close to the center
+            centering=dict(
+                reward_type=reward_functions.norm_reward,
+                obs=lambda x: so('body', 'pos', x['root'], indices=(0, 1)),
+                offset=ring_size + 0.5,
+                scale=centering_scale,
+            ),
         ))
     agent_groups[agent]['reward_names'] += (('control_penalty', agent),
-                                            ('draw_penalty', agent),)
+                                            ('draw_penalty', agent),
+                                            ('centering', agent))
   # add sumo ring
   components.update(get_ring_components(radius=ring_size, num_segments=20))
   merge_desc(
