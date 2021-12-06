@@ -345,10 +345,10 @@ def add_robosumo(
         ))
     agent_groups[agent]['reward_names'] += (('komu_win_bonus', agent, yokozuna),
                                             ('komu_lose_penalty', agent, yokozuna),
-                                            ('komu_move_to_yoko', agent, yokozuna))
+                                            ('move_to_opponent', agent, yokozuna))
     agent_groups[yokozuna]['reward_names'] += (('yoko_win_bonus', agent, yokozuna),
                                                ('yoko_lose_penalty', agent, yokozuna),
-                                               ('yoko_move_to_komu', yokozuna, agent))
+                                               ('move_to_opponent', yokozuna, agent))
   for agent in agents:
     components[agent]['reward_fns'].update(
         dict(
