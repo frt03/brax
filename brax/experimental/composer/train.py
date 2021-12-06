@@ -15,6 +15,8 @@
 """Train a ComposerEnv."""
 import copy
 import datetime
+import functools
+import matplotlib.pyplot as plt
 from typing import Dict, Any
 from brax.experimental.braxlines import experiments
 from brax.experimental.braxlines.common import evaluators
@@ -30,7 +32,8 @@ def train(train_job_params: Dict[str, Any],
           output_dir: str,
           return_dict: Dict[str, float] = None,
           progress_dict: Dict[str, float] = None,
-          env_tag: str = None):
+          env_tag: str = None,
+          save_plot: bool = True):
   """Train."""
   del env_tag
   return_dict = return_dict or {}
@@ -63,6 +66,10 @@ def train(train_job_params: Dict[str, Any],
   times = [datetime.datetime.now()]
   plotpatterns = ['eval/episode_reward', 'eval/episode_score']
 
+  post_plot_fn = None
+  if save_plot:
+    post_plot_fn = functools.partial(plt.savefig, f'{log_path}/progress.png')
+
   progress, _, _, _ = experiments.get_progress_fn(
       plotpatterns,
       times,
@@ -70,7 +77,8 @@ def train(train_job_params: Dict[str, Any],
       max_ncols=5,
       xlim=[0, ppo_params['num_timesteps']],
       return_dict=return_dict,
-      progress_dict=progress_dict)
+      progress_dict=progress_dict,
+      post_plot_fn=post_plot_fn)
 
   ppo_lib = mappo if env_fn().metadata.agent_groups else ppo
   inference_fn, params, _ = ppo_lib.train(

@@ -164,6 +164,7 @@ def add_sumo(
     chase_scale: float = 1.,
     centering_scale: float = 1.,
     knocking_scale: float = 1.,
+    win_bonus: float = 1000.,
 ):
   """Add a sumo task."""
   agents = sorted(env_desc['components'])
@@ -185,14 +186,14 @@ def add_sumo(
                 reward_type=reward_functions.norm_reward,
                 obs=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
                 max_dist=ring_size,
-                done_bonus=1000 * ring_size,
+                done_bonus=win_bonus,
                 scale=-knocking_scale,
             ),
             komu_knocking=dict(
                 reward_type=reward_functions.norm_reward,
                 obs=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
                 max_dist=ring_size,
-                done_bonus=1000 * ring_size,
+                done_bonus=win_bonus,
                 scale=-knocking_scale,
             ),
         ))
