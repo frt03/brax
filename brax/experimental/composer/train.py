@@ -68,7 +68,7 @@ def train(train_job_params: Dict[str, Any],
 
   post_plot_fn = None
   if save_plot:
-    post_plot_fn = functools.partial(plt.savefig, f'{log_path}/progress.png')
+    post_plot_fn = functools.partial(plt.savefig, f'{output_path}/progress.png')
 
   progress, _, _, _ = experiments.get_progress_fn(
       plotpatterns,
