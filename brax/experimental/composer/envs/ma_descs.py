@@ -286,11 +286,11 @@ def add_squidgame(env_desc: Dict[str, Any],
 def add_robosumo(
     env_desc: Dict[str, Any],
     ring_size: float = 3.0,
-    draw_scale: float = 0.,
+    draw_scale: float = 1.,
     knocking_scale: float = 1.,
     control_scale: float = 1.,
     opp_scale: float = 1.,
-    win_bonus: float = 0.,
+    win_bonus: float = 1.,
     centering_scale: float = 1.,
 ):
   """Add a sumo task."""
@@ -311,13 +311,12 @@ def add_robosumo(
                 done_bonus=win_bonus,
                 scale=-knocking_scale,
             ),
-            # TODO: tune scale
             komu_lose_penalty=dict(
                 reward_type=reward_functions.exp_norm_reward,
                 obs=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
                 max_dist=ring_size,
                 done_bonus=-win_bonus,
-                scale=0.0,
+                scale=centering_scale,
             ),
             # yokozuna wants to push out komusubis
             yoko_win_bonus=dict(
@@ -327,13 +326,13 @@ def add_robosumo(
                 done_bonus=win_bonus,
                 scale=-knocking_scale,
             ),
-            # TODO: tune scale
+            # each agent aims to be close to the center
             yoko_lose_penalty=dict(
                 reward_type=reward_functions.exp_norm_reward,
                 obs=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
                 max_dist=ring_size,
                 done_bonus=-win_bonus,
-                scale=0.0,
+                scale=centering_scale,
             ),
             # move to opponent's direction
             move_to_opponent=dict(
@@ -361,17 +360,9 @@ def add_robosumo(
                 reward_type=reward_functions.constant_reward,
                 value=-draw_scale,
             ),
-            # each agent aims to be close to the center
-            centering=dict(
-                reward_type=reward_functions.norm_reward,
-                obs=lambda x: so('body', 'pos', x['root'], indices=(0, 1)),
-                offset=ring_size + 0.5,
-                scale=centering_scale,
-            ),
         ))
     agent_groups[agent]['reward_names'] += (('control_penalty', agent),
-                                            ('draw_penalty', agent),
-                                            ('centering', agent))
+                                            ('draw_penalty', agent))
   # add sumo ring
   components.update(get_ring_components(radius=ring_size, num_segments=20))
   merge_desc(
