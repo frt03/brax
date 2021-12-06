@@ -286,8 +286,10 @@ def add_squidgame(env_desc: Dict[str, Any],
 def add_robosumo(
     env_desc: Dict[str, Any],
     ring_size: float = 3.0,
-    chase_scale: float = 1.,
+    draw_scale: float = 1.,
     knocking_scale: float = 1.,
+    control_scale: float = 1.,
+    opp_scale: float = 1.,
 ):
   """Add a sumo task."""
   agents = sorted(env_desc['components'])
@@ -299,44 +301,63 @@ def add_robosumo(
     edge_name = component_editor.concat_comps(agent, yokozuna)
     edges[edge_name] = dict(
         reward_fns=dict(
-            # komusubis aim to chase the yokozuna and vice versa
-            chase=dict(
-                reward_type='root_dist',
-                offset=2 * ring_size + 0.5,
-                scale=chase_scale),
             # komusubis wants to push out yokozuna
-            # TODO: done_bonus
-            yoko_knocking=dict(
+            komu_win_bonus=dict(
                 reward_type=reward_functions.exp_norm_reward,
                 obs=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
                 max_dist=ring_size,
                 done_bonus=2000,
                 scale=-knocking_scale,
             ),
+            # TODO: tune scale
+            komu_lose_penalty=dict(
+                reward_type=reward_functions.exp_norm_reward,
+                obs=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
+                max_dist=ring_size,
+                done_bonus=-2000,
+                scale=0.0,
+            ),
             # yokozuna wants to push out komusubis
-            # TODO: done_bonus
-            komu_knocking=dict(
+            yoko_win_bonus=dict(
                 reward_type=reward_functions.exp_norm_reward,
                 obs=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
                 max_dist=ring_size,
                 done_bonus=2000,
                 scale=-knocking_scale,
             ),
+            # TODO: tune scale
+            yoko_lose_penalty=dict(
+                reward_type=reward_functions.exp_norm_reward,
+                obs=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
+                max_dist=ring_size,
+                done_bonus=-2000,
+                scale=0.0,
+            ),
+            # move to opponent's direction
+            move_to_opponent=dict(
+                reward_type=reward_functions.direction_reward,
+                obs1=lambda x, y: so('body', 'vel', x['root'], indices=(0, 1)),
+                obs2=lambda x, y: so('body', 'vel', y['root'], indices=(0, 1)),
+                sign=-1.0,
+                scale=opp_scale,
+            ),
         ))
-    agent_groups[agent]['reward_names'] += (('chase', agent, yokozuna),
-                                            ('yoko_knocking', agent, yokozuna))
-    agent_groups[yokozuna]['reward_names'] += (('chase', agent, yokozuna),
-                                               ('komu_knocking', agent, yokozuna))
+    agent_groups[agent]['reward_names'] += (('komu_win_bonus', agent, yokozuna),
+                                            ('komu_lose_penalty', agent, yokozuna),
+                                            ('komu_move_to_yoko', agent, yokozuna))
+    agent_groups[yokozuna]['reward_names'] += (('yoko_win_bonus', agent, yokozuna),
+                                               ('yoko_lose_penalty', agent, yokozuna),
+                                               ('yoko_move_to_komu', yokozuna, agent))
   for agent in agents:
     components[agent]['reward_fns'].update(
         dict(
             control_penalty=dict(
                 reward_type=reward_functions.control_reward,
+                value=control_scale,
             ),
             draw_penalty=dict(
                 reward_type=reward_functions.constant_reward,
-                value=0.0,
-                done_bonus=-1000,
+                value=-draw_scale,
             ),
         ))
     agent_groups[agent]['reward_names'] += (('control_penalty', agent),
@@ -350,7 +371,11 @@ def add_robosumo(
 
 
 TASK_MAP = dict(
-    follow=add_follow, chase=add_chase, sumo=add_sumo, squidgame=add_squidgame)
+  follow=add_follow,
+  chase=add_chase,
+  sumo=add_sumo,
+  squidgame=add_squidgame,
+  robo_sumo=add_robosumo)
 
 
 def create_desc(main_agent: str = 'ant',

@@ -92,8 +92,9 @@ def norm_reward(action: jnp.ndarray, obs_dict: Dict[str, jnp.ndarray],
 
 def exp_norm_reward(action: jnp.ndarray, obs_dict: Dict[str, jnp.ndarray],
                 obs: Observer, **kwargs):
+  reward, done = distance_reward(action, obs_dict, obs1=obs, obs2=0, **kwargs)
   """Exponential negative norm of an observation as reward."""
-  return jnp.exp(distance_reward(action, obs_dict, obs1=obs, obs2=0, **kwargs))
+  return jnp.exp(reward), done
 
 
 def distance_reward(action: jnp.ndarray,
@@ -126,19 +127,17 @@ def control_reward(action: jnp.ndarray,
                    value: float = 1.0):
   """Negative Control reward."""
   del obs_dict
-  reward = -jnp.linalg.norm(action, axis=-1) * value
-  return reward, jnp.zeros_like(reward)
+  ctrl_cost = jnp.linalg.norm(action, axis=-1) * value
+  return -ctrl_cost, jnp.zeros_like(ctrl_cost)
 
 
-# TODO:
 def direction_reward(action: jnp.ndarray,
                      obs_dict: Dict[str, jnp.ndarray],
                      obs1: Union[Observer, jnp.ndarray],
                      obs2: Union[Observer, jnp.ndarray],
-                     max_dist: float = 1e8,
-                     min_dist: float = 0,
+                     sign: float = -1.0,
                      norm_kwargs: Dict[str, Any] = None):
-  """Positive direction reward."""
+  """Positive direction reward based on inner product."""
   del action
   norm_kwargs = norm_kwargs or {}
   obs1 = index_obs_dict(obs_dict, obs1)
@@ -146,14 +145,11 @@ def direction_reward(action: jnp.ndarray,
   ndim = max(obs1.ndim, obs2.ndim)
   obs1 = obs1.reshape((1,) * (ndim - obs1.ndim) + obs1.shape)
   obs2 = obs2.reshape((1,) * (ndim - obs2.ndim) + obs2.shape)
-  delta = obs1 - obs2
-  dist = jnp.linalg.norm(delta, axis=-1, **norm_kwargs)
-  # instead of clipping, terminate
-  # dist = jnp.clip(dist, a_min=min_dist, a_max=max_dist)
-  done = jnp.zeros_like(dist)
-  done = jnp.where(dist < min_dist, x=jnp.ones_like(done), y=done)
-  done = jnp.where(dist > max_dist, x=jnp.ones_like(done), y=done)
-  return -dist, done
+  # get unit vector & direction
+  obs2 /= jnp.linalg.norm(obs2, axis=-1, **norm_kwargs)
+  obs2 *= jnp.sign(sign)
+  inner_product = jnp.sum(obs1 * obs2, axis=-1)
+  return jnp.max(inner_product, 0.0), jnp.zeros_like(inner_product)
 
 
 def get_reward_fns(*components: Dict[str, Any],
