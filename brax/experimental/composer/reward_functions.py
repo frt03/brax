@@ -149,7 +149,7 @@ def direction_reward(action: jnp.ndarray,
   obs2 /= jnp.linalg.norm(obs2, axis=-1, **norm_kwargs)
   obs2 *= jnp.sign(sign)
   inner_product = jnp.sum(obs1 * obs2, axis=-1)
-  return jnp.max(inner_product, 0.0), jnp.zeros_like(inner_product)
+  return jnp.clip(inner_product, a_min=0.0), jnp.zeros_like(inner_product)
 
 
 def get_reward_fns(*components: Dict[str, Any],
