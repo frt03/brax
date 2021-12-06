@@ -290,6 +290,7 @@ def add_robosumo(
     knocking_scale: float = 1.,
     control_scale: float = 1.,
     opp_scale: float = 1.,
+    win_bonus: float = 2000.,
 ):
   """Add a sumo task."""
   agents = sorted(env_desc['components'])
@@ -306,7 +307,7 @@ def add_robosumo(
                 reward_type=reward_functions.exp_norm_reward,
                 obs=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
                 max_dist=ring_size,
-                done_bonus=2000,
+                done_bonus=win_bonus,
                 scale=-knocking_scale,
             ),
             # TODO: tune scale
@@ -314,7 +315,7 @@ def add_robosumo(
                 reward_type=reward_functions.exp_norm_reward,
                 obs=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
                 max_dist=ring_size,
-                done_bonus=-2000,
+                done_bonus=-win_bonus,
                 scale=0.0,
             ),
             # yokozuna wants to push out komusubis
@@ -322,7 +323,7 @@ def add_robosumo(
                 reward_type=reward_functions.exp_norm_reward,
                 obs=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
                 max_dist=ring_size,
-                done_bonus=2000,
+                done_bonus=win_bonus,
                 scale=-knocking_scale,
             ),
             # TODO: tune scale
@@ -330,7 +331,7 @@ def add_robosumo(
                 reward_type=reward_functions.exp_norm_reward,
                 obs=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
                 max_dist=ring_size,
-                done_bonus=-2000,
+                done_bonus=-win_bonus,
                 scale=0.0,
             ),
             # move to opponent's direction
