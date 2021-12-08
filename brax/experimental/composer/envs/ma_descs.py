@@ -286,13 +286,13 @@ def add_squidgame(env_desc: Dict[str, Any],
 
 def add_robosumo(
     env_desc: Dict[str, Any],
-    ring_size: float = 3.0,
-    draw_scale: float = 1.,
+    centering_scale: float = 0.,
+    control_scale: float = 0.1,
+    draw_scale: float = 0.,
     knocking_scale: float = 1.,
-    control_scale: float = 1.,
-    opp_scale: float = 1.,
+    opp_scale: float = 10.,
+    ring_size: float = 3.,
     win_bonus: float = 1.,
-    centering_scale: float = 1.,
 ):
   """Add a sumo task."""
   agents = sorted(env_desc['components'])
