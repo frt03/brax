@@ -379,7 +379,7 @@ def add_robosumo2(
     knocking_scale: float = 0.1,
     control_scale: float = 0.1,
     opp_scale: float = 10.,
-    win_bonus: float = 1.,
+    win_bonus: float = 100.,
     centering_scale: float = 0.0,
 ):
   """Add a sumo task."""
