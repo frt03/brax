@@ -93,6 +93,8 @@ def process_agent_rewards(metadata: Any,
       assert reward_name in reward_tuple_dict, (
           f'{reward_name} not in {reward_tuple_dict.keys()}')
       r, s, d = reward_tuple_dict[reward_name]
+      print(reward_name)
+      print(r)
       reward = reward.at[i].add(r)
       score = score.at[i].add(s)
       done = done.at[i].set(jnp.logical_or(done[i], d))
