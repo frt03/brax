@@ -375,8 +375,8 @@ def add_robosumo(
 def add_robosumo2(
     env_desc: Dict[str, Any],
     ring_size: float = 3.0,
-    draw_scale: float = 1.0,
-    knocking_scale: float = 0.1,
+    draw_scale: float = 0.0,
+    knocking_scale: float = 1.0,
     control_scale: float = 0.1,
     opp_scale: float = 10.,
     win_bonus: float = 1.0,
