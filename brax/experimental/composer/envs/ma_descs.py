@@ -436,7 +436,6 @@ def add_robosumo2(
                 obs1=lambda x, y: so('body', 'vel', y['root'], indices=(0, 1)),
                 obs2=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
                 obs3=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
-                sign=-1.0,
                 scale=opp_scale,
             ),
         ))
