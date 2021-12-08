@@ -152,6 +152,33 @@ def direction_reward(action: jnp.ndarray,
   return jnp.clip(inner_product, a_min=0.0), jnp.zeros_like(inner_product)
 
 
+def direction_reward2(action: jnp.ndarray,
+                     obs_dict: Dict[str, jnp.ndarray],
+                     obs1: Union[Observer, jnp.ndarray],
+                     obs2: Union[Observer, jnp.ndarray],
+                     obs3: Union[Observer, jnp.ndarray],
+                     norm_kwargs: Dict[str, Any] = None):
+  """Positive direction reward based on inner product.
+     obs1: velocity of the agent
+     obs2: position of the agent
+     obs3: position of the opponent
+  """
+  del action
+  norm_kwargs = norm_kwargs or {}
+  obs1 = index_obs_dict(obs_dict, obs1)
+  obs2 = index_obs_dict(obs_dict, obs2)
+  obs3 = index_obs_dict(obs_dict, obs3)
+  ndim = max(obs1.ndim, obs2.ndim, obs3.ndim)
+  obs1 = obs1.reshape((1,) * (ndim - obs1.ndim) + obs1.shape)
+  obs2 = obs2.reshape((1,) * (ndim - obs2.ndim) + obs2.shape)
+  obs3 = obs3.reshape((1,) * (ndim - obs3.ndim) + obs3.shape)
+  # get direction & unit vector
+  direction = obs3 - obs2
+  direction /= jnp.linalg.norm(direction, axis=-1, **norm_kwargs)
+  inner_product = jnp.sum(obs1 * direction, axis=-1)
+  return jnp.clip(inner_product, a_min=0.0), jnp.zeros_like(direction)
+
+
 def get_reward_fns(*components: Dict[str, Any],
                    reward_type: str = 'root_goal',
                    **reward_kwargs):
