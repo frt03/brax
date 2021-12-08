@@ -85,16 +85,10 @@ def process_agent_rewards(metadata: Any,
   all_reward_names = ()
   for i, (_, v) in enumerate(sorted(metadata.agent_groups.items())):
     reward_names = v.get('reward_names', ())
-    # TODO:
-    print(reward_tuple_dict)
-    print(reward.shape)
-    print(reward_names)
     for reward_name in reward_names:
       assert reward_name in reward_tuple_dict, (
           f'{reward_name} not in {reward_tuple_dict.keys()}')
       r, s, d = reward_tuple_dict[reward_name]
-      print(reward_name)
-      print(r.shape)
       reward = reward.at[i].add(r)
       score = score.at[i].add(s)
       done = done.at[i].set(jnp.logical_or(done[i], d))

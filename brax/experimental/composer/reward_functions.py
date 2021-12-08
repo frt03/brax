@@ -173,17 +173,10 @@ def direction_reward2(action: jnp.ndarray,
   obs2 = obs2.reshape((1,) * (ndim - obs2.ndim) + obs2.shape)
   obs3 = obs3.reshape((1,) * (ndim - obs3.ndim) + obs3.shape)
   # get direction & unit vector
-  print(obs1.shape)
-  print(obs2.shape)
-  print(obs3.shape)
   direction = obs3 - obs2
-  print(direction.shape)
   direction /= jnp.linalg.norm(direction, axis=-1, **norm_kwargs)
-  print(jnp.linalg.norm(direction, axis=-1, **norm_kwargs))
   inner_product = jnp.sum(obs1 * direction, axis=-1)
-  print(inner_product)
-  print(inner_product.shape)
-  return jnp.clip(inner_product, a_min=0.0), jnp.zeros_like(direction)
+  return jnp.clip(inner_product, a_min=0.0), jnp.zeros_like(inner_product)
 
 
 def get_reward_fns(*components: Dict[str, Any],
