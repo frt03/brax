@@ -200,8 +200,9 @@ def generate_centipade_config_with_n_torso(n):
     config_i, collides_i = template_torso(i)
     base_config += config_i
     collides += collides_i
-    joint_i, _ = template_joint(i)
-    base_config += joint_i
+    if i < n - 1:
+      joint_i, _ = template_joint(i)
+      base_config += joint_i
   return base_config, collides
 
 def get_specs(num_torso: int = 2):
