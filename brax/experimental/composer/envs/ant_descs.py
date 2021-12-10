@@ -133,6 +133,8 @@ def create_centipede_three_run():
   return composer_utils.edit_desc(
       ENV_DESCS['ant_run'], {
           'components.agent1.component': 'centipede_three',
+          'global_options.dt': 0.02,
+          'global_options.substeps': 4,
       })
 
 

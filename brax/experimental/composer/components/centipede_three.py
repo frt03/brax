@@ -20,7 +20,7 @@ from brax.experimental.composer.components import common
 
 COLLIDES = ('torso_0', 'torso_1', 'legbody_0', 'frontFoot_0', 'legbody_1', 'frontFoot_1', 'legbody_2', 'frontFoot_2')
 
-ROOT = 'torso_1'
+ROOT = 'torso_0'
 
 DEFAULT_OBSERVERS = ('qp', 'cfrc')
 
@@ -416,16 +416,6 @@ actuators {
   angle {
   }
 }
-friction: 0.6
-gravity {
-  z: -9.81
-}
-velocity_damping: 1.0
-angular_damping: -0.05
-baumgarte_erp: 0.1
-dt: 0.02
-substeps: 4
-
 """
 
 
