@@ -53,6 +53,7 @@ _envs = {
     'reacherangle': reacherangle.ReacherAngle,
     'ur5e': ur5e.Ur5e,
     'walker2d': walker2d.Walker2d,
+    'centipede_six': centipede_six.CentipedeSix,
 }
 
 
