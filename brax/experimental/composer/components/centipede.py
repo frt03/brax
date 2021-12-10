@@ -18,7 +18,7 @@ from brax.experimental.composer.components.ant import term_fn
 from jax import numpy as jnp
 
 def generate_centipade_config_with_n_torso(n):
-  assert n >= 2
+  # assert n >= 2
   """Generate info for n-legged ant."""
 
   def template_torso(theta, ind):
@@ -188,7 +188,7 @@ def generate_centipade_config_with_n_torso(n):
       actuators {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}"
         joint: "torso_{str(ind)}_torso_{str(ind+1)}"
-        strength: 100.0
+        strength: 300.0
         torque {{}}
       }}
       joints {{
@@ -206,7 +206,7 @@ def generate_centipade_config_with_n_torso(n):
       actuators {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}_updown"
         joint: "torso_{str(ind)}_torso_{str(ind+1)}_updown"
-        strength: 100.0
+        strength: 300.0
         torque {{}}
       }}
       """
