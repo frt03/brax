@@ -182,7 +182,7 @@ def generate_centipade_config_with_n_torso(n):
         angular_damping: 35
         angle_limit {{ min: -20.0 max: 20.0 }}
         rotation {{ y: -90 }}
-        reference_rotation {{ y: -0.0 }}
+        reference_rotation {{ z: 180.0 }}
       }}
       actuators {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}"
