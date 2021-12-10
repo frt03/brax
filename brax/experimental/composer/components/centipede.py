@@ -175,8 +175,8 @@ def generate_centipade_config_with_n_torso(n):
     tmp = f"""
       joints {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}"
-        parent_offset {{ x: {0.25+0.01}  }}
-        child_offset {{ x: {-0.25-0.01}  }}
+        parent_offset {{ x: {0.25+0.03}  }}
+        child_offset {{ x: {-0.25-0.03}  }}
         parent: "torso_{str(ind)}"
         child: "torso_{str(ind+1)}"
         stiffness: 5000.0
@@ -193,8 +193,8 @@ def generate_centipade_config_with_n_torso(n):
       }}
       joints {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}_updown"
-        parent_offset {{ x: {0.25+0.01}  }}
-        child_offset {{ x: {-0.25-0.01}  }}
+        parent_offset {{ x: {0.25+0.03}  }}
+        child_offset {{ x: {-0.25-0.03}  }}
         parent: "torso_{str(ind)}"
         child: "torso_{str(ind+1)}"
         stiffness: 5000.0
