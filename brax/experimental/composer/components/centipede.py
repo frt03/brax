@@ -216,12 +216,13 @@ def generate_centipade_config_with_n_torso(n):
   base_config = f""""""
   collides = tuple()
   for i in range(n):
-    if i == 0:
-      theta = jnp.pi*3/4
-    elif i == n - 1:
-      theta = jnp.pi/4
-    else:
-      theta = jnp.pi/2
+    # if i == 0:
+    #  theta = jnp.pi*3/4
+    # elif i == n - 1:
+    #   theta = jnp.pi/4
+    # else:
+    #   theta = jnp.pi/2
+    theta = jnp.pi/2
     config_i, collides_i = template_torso(theta, i)
     base_config += config_i
     collides += collides_i
