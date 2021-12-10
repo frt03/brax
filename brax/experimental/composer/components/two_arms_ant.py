@@ -298,8 +298,8 @@ joints {
 }
 joints {
   name: "torso_Aux 14"
-  parent_offset { x: 0.2 y: 0.2 }
-  child_offset { x: -0.1 y: -0.1 }
+  parent_offset { x: 0.15 y: 0.15 }
+  child_offset { x: -0.15 y: -0.15 }
   parent: "torso"
   child: "Aux 14"
   stiffness: 5000.0
@@ -309,8 +309,8 @@ joints {
 }
 joints {
   name: "Aux 14_$ Body 16"
-  parent_offset { x: 0.1 y: 0.1 }
-  child_offset { x: -0.2 y: -0.2 }
+  parent_offset { x: 0.15 y: 0.15 }
+  child_offset { x: -0.15 y: -0.15 }
   parent: "Aux 14"
   child: "$ Body 16"
   stiffness: 5000.0
@@ -323,8 +323,8 @@ joints {
 }
 joints {
   name: "torso_Aux 15"
-  parent_offset { x: 0.2 y: -0.2 }
-  child_offset { x: -0.1 y: 0.1 }
+  parent_offset { x: 0.15 y: -0.15 }
+  child_offset { x: -0.15 y: 0.15 }
   parent: "torso"
   child: "Aux 15"
   stiffness: 5000.0
@@ -334,8 +334,8 @@ joints {
 }
 joints {
   name: "Aux 15_$ Body 17"
-  parent_offset { x: 0.1 y: -0.1 }
-  child_offset { x: -0.2 y: 0.2 }
+  parent_offset { x: 0.15 y: -0.15 }
+  child_offset { x: -0.15 y: 0.15 }
   parent: "Aux 15"
   child: "$ Body 17"
   stiffness: 5000.0
