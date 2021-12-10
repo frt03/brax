@@ -26,10 +26,8 @@ def generate_centipade_config_with_n_torso(n):
       bodies {{
         name: "torso_{str(ind)}"
         colliders {{
-          capsule {{
+          sphere {{
             radius: 0.25
-            length: 0.5
-            end: 1
           }}
         }}
         inertia {{ x: 1.0 y: 1.0 z: 1.0 }}
@@ -175,8 +173,8 @@ def generate_centipade_config_with_n_torso(n):
     tmp = f"""
       joints {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}"
-        parent_offset {{ x: 0.3  }}
-        child_offset {{ x: -0.3  }}
+        parent_offset {{ x: 0.25  }}
+        child_offset {{ x: -0.25  }}
         parent: "torso_{str(ind)}"
         child: "torso_{str(ind+1)}"
         stiffness: 5000.0
@@ -193,8 +191,8 @@ def generate_centipade_config_with_n_torso(n):
       }}
       joints {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}_updown"
-        parent_offset {{ x: 0.3  }}
-        child_offset {{ x: -0.3  }}
+        parent_offset {{ x: 0.25  }}
+        child_offset {{ x: -0.25  }}
         parent: "torso_{str(ind)}"
         child: "torso_{str(ind+1)}"
         stiffness: 5000.0
@@ -222,7 +220,7 @@ def generate_centipade_config_with_n_torso(n):
     #   theta = jnp.pi/4
     # else:
     #   theta = jnp.pi/2
-    theta = jnp.pi/2
+    theta = jnp.pi / 2
     config_i, collides_i = template_torso(theta, i)
     base_config += config_i
     collides += collides_i
