@@ -33,6 +33,7 @@ from brax.envs import reacher
 from brax.envs import reacherangle
 from brax.envs import ur5e
 from brax.envs import walker2d
+from brax.envs import centipede_six
 from brax.envs import wrappers
 from brax.envs.env import Env, State, Wrapper
 import gym
