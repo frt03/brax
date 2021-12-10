@@ -192,7 +192,7 @@ def generate_centipade_config_with_n_torso(n):
         torque {{}}
       }}
       joints {{
-        name: "torso_{str(ind)}_torso_{str(ind+1)}_updown"
+        name: "torso_{str(ind)}_updown_torso_{str(ind+1)}"
         parent_offset {{ x: 0.25  }}
         child_offset {{ x: -0.25  }}
         parent: "torso_{str(ind)}"
