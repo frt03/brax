@@ -133,7 +133,7 @@ def generate_centipade_config_with_n_torso(n):
         angular_damping: 35
         angle_limit {{ min: -30.0 max: 30.0 }}
         rotation {{ y: -90 }}
-        reference_rotation {{ z: {-theta*180/np.pi} }}
+        reference_rotation {{ z: {-theta*180/jnp.pi} }}
       }}
       joints {{
         name: "Aux 2_{str(ind)}_$ Body 5_{str(ind)}"
