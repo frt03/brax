@@ -20,9 +20,9 @@ from brax.experimental.composer.components import common
 
 COLLIDES = ('torso_0', 'torso_1', 'legbody_0', 'frontFoot_0', 'legbody_1', 'frontFoot_1', 'legbody_2', 'frontFoot_2')
 
-ROOT = 'torso_0'
+ROOT = 'torso_1'
 
-DEFAULT_OBSERVERS = ('root_z_joints', 'cfrc')
+DEFAULT_OBSERVERS = ('qp', 'cfrc')
 
 def term_fn(done, sys, qp: brax.QP, info: brax.Info, component,
             **unused_kwargs):
