@@ -161,14 +161,14 @@ def generate_centipade_config_with_n_torso(n):
         torque {{}}
       }}
       """
-      collides = (
-        f'torso_{str(ind)}',
-        f'Aux 1_{str(ind)}',
-        f'$ Body 4_{str(ind)}',
-        f'Aux 2_{str(ind)}',
-        f'$ Body 5_{str(ind)}')
+    collides = (
+      f'torso_{str(ind)}',
+      f'Aux 1_{str(ind)}',
+      f'$ Body 4_{str(ind)}',
+      f'Aux 2_{str(ind)}',
+      f'$ Body 5_{str(ind)}')
 
-      return tmp, collides
+    return tmp, collides
 
     def template_joint(ind):
       tmp = f"""
