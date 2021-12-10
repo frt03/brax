@@ -61,7 +61,7 @@ def generate_centipade_config_with_n_torso(n):
       }}
       joints {{
         name: "torso_{str(ind)}_Aux 1_{str(ind)}"
-        parent_offset {{ x: 0.3014213609695435 y: 0.0 }}
+        parent_offset {{ x: 0.0 y: 0.3014213609695435 }}
         child_offset {{ }}
         parent: "torso_{str(ind)}"
         child: "Aux 1_{str(ind)}"
@@ -124,7 +124,7 @@ def generate_centipade_config_with_n_torso(n):
       }}
       joints {{
         name: "torso_{str(ind)}_Aux 2_{str(ind)}"
-        parent_offset {{ x: -0.3014213609695435 y: 3.6913470490599033e-17 }}
+        parent_offset {{ x: 0.0 y: -0.3014213609695435}}
         child_offset {{ }}
         parent: "torso_{str(ind)}"
         child: "Aux 2_{str(ind)}"
