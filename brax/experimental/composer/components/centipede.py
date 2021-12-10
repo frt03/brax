@@ -236,6 +236,6 @@ def get_specs(num_torso: int = 3):
   return dict(
       message_str=message_str,
       collides=collides,
-      root='torso_0',
+      root='torso_1',  # TODO:
       term_fn=term_fn,
       observers=DEFAULT_OBSERVERS)
