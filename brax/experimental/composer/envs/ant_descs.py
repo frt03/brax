@@ -129,7 +129,7 @@ def create_pro_ant_run(num_legs: int = 4):
       })
 
 
-def create_centipede_run():
+def create_centipede_three_run():
   return composer_utils.edit_desc(
       ENV_DESCS['ant_run'], {
           'components.agent1.component': 'centipede_three',
