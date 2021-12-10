@@ -231,7 +231,7 @@ def generate_centipade_config_with_n_torso(n):
       base_config += joint_i
   return base_config, collides
 
-def get_specs(num_torso: int = 2):
+def get_specs(num_torso: int = 3):
   message_str, collides = generate_centipade_config_with_n_torso(num_torso)
   return dict(
       message_str=message_str,
