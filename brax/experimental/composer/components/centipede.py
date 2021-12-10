@@ -69,7 +69,7 @@ def generate_centipade_config_with_n_torso(n):
         angular_damping: 35
         angle_limit {{ min: -30.0 max: 30.0 }}
         rotation {{ y: -90 }}
-        reference_rotation {{ z: 0.0 }}
+        reference_rotation {{ z: 90.0 }}
       }}
       joints {{
         name: "Aux 1_{str(ind)}_$ Body 4_{str(ind)}"
@@ -132,7 +132,7 @@ def generate_centipade_config_with_n_torso(n):
         angular_damping: 35
         angle_limit {{ min: -30.0 max: 30.0 }}
         rotation {{ y: -90 }}
-        reference_rotation {{ z: 180.0 }}
+        reference_rotation {{ z: -90.0 }}
       }}
       joints {{
         name: "Aux 2_{str(ind)}_$ Body 5_{str(ind)}"
