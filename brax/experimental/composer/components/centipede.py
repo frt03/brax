@@ -15,12 +15,13 @@
 """Procedural centipade."""
 from brax.experimental.composer.components.ant import DEFAULT_OBSERVERS
 from brax.experimental.composer.components.ant import term_fn
+from jax import numpy as jnp
 
 def generate_centipade_config_with_n_torso(n):
   assert n >= 2
   """Generate info for n-legged ant."""
 
-  def template_torso(ind):
+  def template_torso(theta, ind):
     tmp = f"""
       bodies {{
         name: "torso_{str(ind)}"
@@ -61,7 +62,7 @@ def generate_centipade_config_with_n_torso(n):
       }}
       joints {{
         name: "torso_{str(ind)}_Aux 1_{str(ind)}"
-        parent_offset {{ x: 0.0 y: 0.3014213609695435 }}
+        parent_offset {{ x: {((0.4428427219390869/2.)+.08)*jnp.cos(theta)} y: {((0.4428427219390869/2.)+.08)*jnp.sin(theta)} }}
         child_offset {{ }}
         parent: "torso_{str(ind)}"
         child: "Aux 1_{str(ind)}"
@@ -69,7 +70,7 @@ def generate_centipade_config_with_n_torso(n):
         angular_damping: 35
         angle_limit {{ min: -30.0 max: 30.0 }}
         rotation {{ y: -90 }}
-        reference_rotation {{ z: 90.0 }}
+        reference_rotation {{ z: {theta*180/np.pi} }}
       }}
       joints {{
         name: "Aux 1_{str(ind)}_$ Body 4_{str(ind)}"
@@ -124,7 +125,7 @@ def generate_centipade_config_with_n_torso(n):
       }}
       joints {{
         name: "torso_{str(ind)}_Aux 2_{str(ind)}"
-        parent_offset {{ x: 0.0 y: -0.3014213609695435}}
+        parent_offset {{ x: {((0.4428427219390869/2.)+.08)*jnp.cos(-theta)} y: {((0.4428427219390869/2.)+.08)*jnp.sin(-theta)} }}
         child_offset {{ }}
         parent: "torso_{str(ind)}"
         child: "Aux 2_{str(ind)}"
@@ -132,7 +133,7 @@ def generate_centipade_config_with_n_torso(n):
         angular_damping: 35
         angle_limit {{ min: -30.0 max: 30.0 }}
         rotation {{ y: -90 }}
-        reference_rotation {{ z: -90.0 }}
+        reference_rotation {{ z: {-theta*180/np.pi} }}
       }}
       joints {{
         name: "Aux 2_{str(ind)}_$ Body 5_{str(ind)}"
@@ -182,7 +183,25 @@ def generate_centipade_config_with_n_torso(n):
         angular_damping: 35
         angle_limit {{ min: -20.0 max: 20.0 }}
         rotation {{ y: -90 }}
-        reference_rotation {{ y: -0.0 }}
+        reference_rotation {{ y: 0.0 }}
+      }}
+      actuators {{
+        name: "torso_{str(ind)}_torso_{str(ind+1)}"
+        joint: "torso_{str(ind)}_torso_{str(ind+1)}"
+        strength: 300.0
+        torque {{}}
+      }}
+      joints {{
+        name: "torso_{str(ind)}_torso_{str(ind+1)}_updown"
+        parent_offset {{ x: 0.25  }}
+        child_offset {{ x: -0.25  }}
+        parent: "torso_{str(ind)}"
+        child: "torso_{str(ind+1)}"
+        stiffness: 5000.0
+        angular_damping: 35
+        angle_limit {{ min: -10.0 max: 30.0 }}
+        rotation {{ y: 0.0 z: 90.0 }}
+        reference_rotation {{ y: 0.0 }}
       }}
       actuators {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}"
@@ -197,7 +216,13 @@ def generate_centipade_config_with_n_torso(n):
   base_config = f""""""
   collides = tuple()
   for i in range(n):
-    config_i, collides_i = template_torso(i)
+    if i == 0:
+      theta = jnp.pi/4
+    elif i == n - 1:
+      theta = jnp.pi*3/4
+    else:
+      theta = jnp.pi/2
+    config_i, collides_i = template_torso(theta, i)
     base_config += config_i
     collides += collides_i
     if i < n - 1:
