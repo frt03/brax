@@ -298,50 +298,50 @@ joints {
 }
 joints {
   name: "torso_Aux 14"
-  parent_offset { x: 0.15 y: 0.15 }
-  child_offset { x: -0.15 y: -0.15 }
+  parent_offset { x: 0.05 y: 0.05 }
+  child_offset { x: -0.05 y: -0.05 }
   parent: "torso"
   child: "Aux 14"
   stiffness: 5000.0
   angular_damping: 35
-  angle_limit { min: -30.0 max: 30.0 }
+  angle_limit { min: 0.0 max: 60.0 }
   rotation { y: 90 }
 }
 joints {
   name: "Aux 14_$ Body 16"
-  parent_offset { x: 0.15 y: 0.15 }
-  child_offset { x: -0.15 y: -0.15 }
+  parent_offset { x: 0.05 y: 0.05 }
+  child_offset { x: -0.05 y: -0.05 }
   parent: "Aux 14"
   child: "$ Body 16"
   stiffness: 5000.0
   angular_damping: 35
   rotation: { z: 135 }
   angle_limit {
-    min: 30.0
-    max: 70.0
+    min: 60.0
+    max: 100.0
   }
 }
 joints {
   name: "torso_Aux 15"
-  parent_offset { x: 0.15 y: -0.15 }
-  child_offset { x: -0.15 y: 0.15 }
+  parent_offset { x: 0.05 y: -0.05 }
+  child_offset { x: -0.05 y: 0.05 }
   parent: "torso"
   child: "Aux 15"
   stiffness: 5000.0
   angular_damping: 35
   rotation { y: 90 }
-  angle_limit { min: -30.0 max: 30.0 }
+  angle_limit { min: 0.0 max: 60.0 }
 }
 joints {
   name: "Aux 15_$ Body 17"
-  parent_offset { x: 0.15 y: -0.15 }
-  child_offset { x: -0.15 y: 0.15 }
+  parent_offset { x: 0.05 y: -0.05 }
+  child_offset { x: -0.05 y: 0.05 }
   parent: "Aux 15"
   child: "$ Body 17"
   stiffness: 5000.0
   angular_damping: 35
   rotation { z: 45 }
-  angle_limit { min: 30.0 max: 70.0 }
+  angle_limit { min: 60.0 max: 100.0 }
 }
 actuators {
   name: "torso_Aux 1"
