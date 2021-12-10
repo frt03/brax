@@ -129,17 +129,15 @@ def create_pro_ant_run(num_legs: int = 4):
       })
 
 
-def create_centipede_run(num_torso: int = 3):
+def create_centipede_run():
   return composer_utils.edit_desc(
       ENV_DESCS['ant_run'], {
-          'components.agent1.component': 'centipede',
-          'components.agent1.component_params': dict(num_torso=num_torso),
-          'global_options.dt': 0.02,
-          'global_options.substeps': 16,
+          'components.agent1.component': 'centipede_three',
       })
 
 ENV_DESCS['pro_ant_run'] = create_pro_ant_run
 ENV_DESCS['centipede_run'] = create_centipede_run
+ENV_DESCS['centipede_three_run'] = create_centipede_three_run
 
 VARIANTS = (('ant_run', 'octopus_run', {
     'components.agent1.component': 'octopus',

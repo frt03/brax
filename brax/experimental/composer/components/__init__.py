@@ -23,7 +23,7 @@ import importlib
 from typing import Any, Dict
 
 DEFAULT_REGISTER_COMPONENTS = ('ant', 'ground', 'halfcheetah', 'singleton',
-                               'pro_ant', 'octopus', 'centipede')
+                               'pro_ant', 'octopus', 'centipede', 'centipede_three')
 
 COMPONENT_MAPPING = {}
 
