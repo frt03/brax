@@ -36,7 +36,7 @@ class Walker2d(brax_env.Env):
                ctrl_cost_weight: float = 1e-3,
                healthy_reward: float = 1.0,
                terminate_when_unhealthy: bool = True,
-               healthy_z_range: Tuple[float, float] = (0.7, 20.0),
+               healthy_z_range: Tuple[float, float] = (0.0, 30.0),
                exclude_current_positions_from_observation: bool = True,
                system_config: Optional[str] = None,
                **kwargs):
