@@ -24,6 +24,7 @@ from typing import Any, Dict, Union
 from brax.experimental.composer.observers import Observer
 from brax.experimental.composer.observers import SimObserver as so
 from jax import numpy as jnp
+from jax import lax
 
 
 def get_default_kwargs(fn):
