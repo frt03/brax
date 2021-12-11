@@ -75,6 +75,15 @@ def constant_reward(action: jnp.ndarray,
   return reward, jnp.zeros_like(reward)
 
 
+def control_reward(action: jnp.ndarray,
+                   obs_dict: Dict[str, jnp.ndarray],
+                   value: float = 1.0):
+  """Negative Control reward."""
+  del obs_dict
+  ctrl_cost = jnp.linalg.norm(action, axis=-1) * value
+  return -ctrl_cost, jnp.zeros_like(ctrl_cost)
+
+
 def index_obs_dict(obs_dict: Dict[str, jnp.ndarray], obs: Union[Observer,
                                                                 jnp.ndarray]):
   """Index obs_dict with observer."""
@@ -88,6 +97,13 @@ def norm_reward(action: jnp.ndarray, obs_dict: Dict[str, jnp.ndarray],
                 obs: Observer, **kwargs):
   """Negative norm of an observation as reward."""
   return distance_reward(action, obs_dict, obs1=obs, obs2=0, **kwargs)
+
+
+def exp_norm_reward(action: jnp.ndarray, obs_dict: Dict[str, jnp.ndarray],
+                obs: Observer, **kwargs):
+  reward, done = distance_reward(action, obs_dict, obs1=obs, obs2=0, **kwargs)
+  """Exponential negative norm of an observation as reward."""
+  return jnp.exp(reward), done
 
 
 def distance_reward(action: jnp.ndarray,
@@ -113,6 +129,48 @@ def distance_reward(action: jnp.ndarray,
   done = jnp.where(dist < min_dist, x=jnp.ones_like(done), y=done)
   done = jnp.where(dist > max_dist, x=jnp.ones_like(done), y=done)
   return -dist, done
+
+
+def direction_reward(action: jnp.ndarray,
+                     obs_dict: Dict[str, jnp.ndarray],
+                     obs1: Union[Observer, jnp.ndarray],
+                     obs2: Union[Observer, jnp.ndarray],
+                     obs3: Union[Observer, jnp.ndarray],
+                     obs4: Union[Observer, jnp.ndarray],
+                     sign: float = -1.0,
+                     norm_kwargs: Dict[str, Any] = None):
+  """Positive direction reward based on inner product.
+     obs1: velocity of the agent
+     obs2: velocity of the opponent
+     obs3: position of the agent
+     obs4: position of the opponent
+  """
+  del action
+  norm_kwargs = norm_kwargs or {}
+  obs1 = index_obs_dict(obs_dict, obs1)
+  obs2 = index_obs_dict(obs_dict, obs2)
+  obs3 = index_obs_dict(obs_dict, obs3)
+  obs4 = index_obs_dict(obs_dict, obs4)
+  ndim = max(obs1.ndim, obs2.ndim, obs3.ndim, obs4.ndim)
+  obs1 = obs1.reshape((1,) * (ndim - obs1.ndim) + obs1.shape)
+  obs2 = obs2.reshape((1,) * (ndim - obs2.ndim) + obs2.shape)
+  obs3 = obs3.reshape((1,) * (ndim - obs3.ndim) + obs3.shape)
+  obs4 = obs4.reshape((1,) * (ndim - obs4.ndim) + obs4.shape)
+  agent_sign = jnp.sign(jnp.sum((obs4 - obs3) * obs1, axis=-1))
+  opp_sign = jnp.sign(jnp.sum((obs3 - obs4) * obs2, axis=-1))
+  # get unit vector & direction
+  obs2 /= jnp.linalg.norm(obs2, axis=-1, **norm_kwargs)
+  obs2 *= jnp.sign(sign)
+  inner_product = lax.cond(
+    agent_sign,
+    lambda x: lax.cond(
+      x,
+      lambda y: jnp.sum(obs1 * y, axis=-1),
+      lambda y: jnp.zeros_like(x),
+      obs2),
+    lambda x: jnp.zeros_like(x),
+    opp_sign)
+  return jnp.clip(inner_product, a_min=0.0), jnp.zeros_like(inner_product)
 
 
 def get_reward_fns(*components: Dict[str, Any],
