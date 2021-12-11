@@ -217,21 +217,21 @@ def add_sumo(
                 obs4=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
                 scale=opp_scale,
             ),
-            #yoko_move_to_komu=dict(
-            #    reward_type=reward_functions.direction_reward,
-            #    obs1=lambda x, y: so('body', 'vel', y['root'], indices=(0, 1)),
-            #    obs2=lambda x, y: so('body', 'vel', x['root'], indices=(0, 1)),
-            #    obs3=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
-            #    obs4=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
-            #    scale=opp_scale,
-            #),
+            yoko_move_to_komu=dict(
+                reward_type=reward_functions.direction_reward,
+                obs1=lambda x, y: so('body', 'vel', y['root'], indices=(0, 1)),
+                obs2=lambda x, y: so('body', 'vel', x['root'], indices=(0, 1)),
+                obs3=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
+                obs4=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
+                scale=opp_scale,
+            ),
         ))
     agent_groups[agent]['reward_names'] += (('komu_win_bonus', agent, yokozuna),
                                             ('komu_lose_penalty', agent, yokozuna),
                                             ('komu_move_to_yoko', agent, yokozuna))
     agent_groups[yokozuna]['reward_names'] += (('yoko_win_bonus', agent, yokozuna),
                                                ('yoko_lose_penalty', agent, yokozuna),
-                                               ('komu_move_to_yoko', agent, yokozuna))
+                                               ('yoko_move_to_komu', yokozuna, agent))
   for agent in agents:
     components[agent]['reward_fns'].update(
         dict(
