@@ -210,7 +210,7 @@ def add_sumo(
             ),
             # move to opponent's direction
             komu_move_to_yoko=dict(
-                reward_type=reward_functions.direction_reward3,
+                reward_type=reward_functions.direction_reward,
                 obs1=lambda x, y: so('body', 'vel', x['root'], indices=(0, 1)),
                 obs2=lambda x, y: so('body', 'vel', y['root'], indices=(0, 1)),
                 obs3=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
@@ -219,7 +219,7 @@ def add_sumo(
                 scale=opp_scale,
             ),
             yoko_move_to_komu=dict(
-                reward_type=reward_functions.direction_reward3,
+                reward_type=reward_functions.direction_reward,
                 obs1=lambda x, y: so('body', 'vel', y['root'], indices=(0, 1)),
                 obs2=lambda x, y: so('body', 'vel', x['root'], indices=(0, 1)),
                 obs3=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
