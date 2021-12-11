@@ -137,40 +137,25 @@ def direction_reward(action: jnp.ndarray,
                      obs1: Union[Observer, jnp.ndarray],
                      obs2: Union[Observer, jnp.ndarray],
                      obs3: Union[Observer, jnp.ndarray],
-                     obs4: Union[Observer, jnp.ndarray],
-                     sign: float = -1.0,
                      norm_kwargs: Dict[str, Any] = None):
   """Positive direction reward based on inner product.
      obs1: velocity of the agent
-     obs2: velocity of the opponent
-     obs3: position of the agent
-     obs4: position of the opponent
+     obs2: position of the agent
+     obs3: position of the opponent
   """
   del action
   norm_kwargs = norm_kwargs or {}
   obs1 = index_obs_dict(obs_dict, obs1)
   obs2 = index_obs_dict(obs_dict, obs2)
   obs3 = index_obs_dict(obs_dict, obs3)
-  obs4 = index_obs_dict(obs_dict, obs4)
-  ndim = max(obs1.ndim, obs2.ndim, obs3.ndim, obs4.ndim)
+  ndim = max(obs1.ndim, obs2.ndim, obs3.ndim)
   obs1 = obs1.reshape((1,) * (ndim - obs1.ndim) + obs1.shape)
   obs2 = obs2.reshape((1,) * (ndim - obs2.ndim) + obs2.shape)
   obs3 = obs3.reshape((1,) * (ndim - obs3.ndim) + obs3.shape)
-  obs4 = obs4.reshape((1,) * (ndim - obs4.ndim) + obs4.shape)
-  agent_sign = jnp.sign(jnp.sum((obs4 - obs3) * obs1, axis=-1))
-  opp_sign = jnp.sign(jnp.sum((obs3 - obs4) * obs2, axis=-1))
-  # get unit vector & direction
-  obs2 /= jnp.linalg.norm(obs2, axis=-1, **norm_kwargs)
-  obs2 *= jnp.sign(sign)
-  inner_product = lax.cond(
-    agent_sign,
-    lambda x: lax.cond(
-      x,
-      lambda y: jnp.sum(obs1 * y, axis=-1),
-      lambda y: jnp.zeros_like(x),
-      obs2),
-    lambda x: jnp.zeros_like(x),
-    opp_sign)
+  # get direction & unit vector
+  direction = obs3 - obs2
+  direction /= jnp.linalg.norm(direction, axis=-1, **norm_kwargs)
+  inner_product = jnp.sum(obs1 * direction, axis=-1)
   return jnp.clip(inner_product, a_min=0.0), jnp.zeros_like(inner_product)
 
 
