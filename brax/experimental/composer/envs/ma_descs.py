@@ -159,13 +159,13 @@ def get_ring_components(name: str = 'ring',
 
 def add_sumo(
     env_desc: Dict[str, Any],
-    centering_scale: float = 0.0,
-    control_scale: float = 0.1,
-    draw_scale: float = 0.0,
-    ring_size: float = 3.0,
-    knocking_scale: float = 1.0,
+    centering_scale: float = 0.,
+    control_scale: float = .1,
+    draw_scale: float = 1.,
+    ring_size: float = 3.,
+    knocking_scale: float = .1,
     opp_scale: float = 10.,
-    win_bonus: float = 1.0,
+    win_bonus: float = 1.,
 ):
   """Add a sumo task."""
   agents = sorted(env_desc['components'])
