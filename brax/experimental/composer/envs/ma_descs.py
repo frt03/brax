@@ -231,7 +231,7 @@ def add_sumo(
                                             ('komu_move_to_yoko', agent, yokozuna))
     agent_groups[yokozuna]['reward_names'] += (('yoko_win_bonus', agent, yokozuna),
                                                ('yoko_lose_penalty', agent, yokozuna),
-                                               ('yoko_move_to_komu', agent, yokozuna))
+                                               ('komu_move_to_yoko', agent, yokozuna))
   for agent in agents:
     components[agent]['reward_fns'].update(
         dict(
