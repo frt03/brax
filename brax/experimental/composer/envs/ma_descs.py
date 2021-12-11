@@ -157,16 +157,14 @@ def get_ring_components(name: str = 'ring',
   return components
 
 
-def add_sumo(
-    env_desc: Dict[str, Any],
-    centering_scale: float = 0.,
-    control_scale: float = 0.1,
-    draw_scale: float = 0.,
-    knocking_scale: float = 1.,
-    opp_scale: float = 10.,
-    ring_size: float = 3.,
-    win_bonus: float = 1.,
-):
+def add_sumo(env_desc: Dict[str, Any],
+             centering_scale: float = 0.,
+             control_scale: float = 0.1,
+             draw_scale: float = 0.,
+             knocking_scale: float = 1.,
+             opp_scale: float = 10.,
+             ring_size: float = 3.,
+             win_bonus: float = 1.,):
   """Add a sumo task."""
   agents = sorted(env_desc['components'])
   agent_groups = {agent: {'reward_names': ()} for agent in agents}
@@ -209,31 +207,20 @@ def add_sumo(
                 scale=centering_scale,
             ),
             # move to opponent's direction
-            komu_move_to_yoko=dict(
+            move_to_opponent=dict(
                 reward_type=reward_functions.direction_reward,
                 obs1=lambda x, y: so('body', 'vel', x['root'], indices=(0, 1)),
                 obs2=lambda x, y: so('body', 'vel', y['root'], indices=(0, 1)),
-                obs3=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
-                obs4=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
-                sign=-1.0,
-                scale=opp_scale,
-            ),
-            yoko_move_to_komu=dict(
-                reward_type=reward_functions.direction_reward,
-                obs1=lambda x, y: so('body', 'vel', y['root'], indices=(0, 1)),
-                obs2=lambda x, y: so('body', 'vel', x['root'], indices=(0, 1)),
-                obs3=lambda x, y: so('body', 'pos', y['root'], indices=(0, 1)),
-                obs4=lambda x, y: so('body', 'pos', x['root'], indices=(0, 1)),
                 sign=-1.0,
                 scale=opp_scale,
             ),
         ))
     agent_groups[agent]['reward_names'] += (('komu_win_bonus', agent, yokozuna),
                                             ('komu_lose_penalty', agent, yokozuna),
-                                            ('komu_move_to_yoko', agent, yokozuna))
+                                            ('move_to_opponent', agent, yokozuna))
     agent_groups[yokozuna]['reward_names'] += (('yoko_win_bonus', agent, yokozuna),
                                                ('yoko_lose_penalty', agent, yokozuna),
-                                               ('yoko_move_to_komu', yokozuna, agent))
+                                               ('move_to_opponent', yokozuna, agent))
   for agent in agents:
     components[agent]['reward_fns'].update(
         dict(
