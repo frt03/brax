@@ -51,14 +51,17 @@ class Ant(env.Env):
     x_before = state.qp.pos[0, 0]
     x_after = qp.pos[0, 0]
     forward_reward = (x_after - x_before) / self.sys.config.dt
+    z_before = state.qp.pos[0, 2]
+    z_after = qp.pos[0, 2]
+    jump_reward = jp.abs(z_after - z_before) / self.sys.config.dt
     ctrl_cost = .5 * jp.sum(jp.square(action))
     contact_cost = (0.5 * 1e-3 *
                     jp.sum(jp.square(jp.clip(info.contact.vel, -1, 1))))
     survive_reward = jp.float32(1)
-    reward = forward_reward - ctrl_cost - contact_cost + survive_reward
+    reward = forward_reward - ctrl_cost - contact_cost + survive_reward + jump_reward
 
-    done = jp.where(qp.pos[0, 2] < 0.2, x=jp.float32(1), y=jp.float32(0))
-    done = jp.where(qp.pos[0, 2] > 1.0, x=jp.float32(1), y=done)
+    done = jp.where(qp.pos[0, 2] < 0.1, x=jp.float32(1), y=jp.float32(0))
+    done = jp.where(qp.pos[0, 2] > 10.0, x=jp.float32(1), y=done)
     state.metrics.update(
         reward_ctrl_cost=ctrl_cost,
         reward_contact_cost=contact_cost,
