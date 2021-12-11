@@ -36,7 +36,7 @@ class Walker2d(brax_env.Env):
                ctrl_cost_weight: float = 1e-3,
                healthy_reward: float = 1.0,
                terminate_when_unhealthy: bool = True,
-               healthy_z_range: Tuple[float, float] = (0.7, 2.0),
+               healthy_z_range: Tuple[float, float] = (0.7, 20.0),
                exclude_current_positions_from_observation: bool = True,
                system_config: Optional[str] = None,
                **kwargs):
@@ -84,6 +84,7 @@ class Walker2d(brax_env.Env):
     reward, done, zero = jp.zeros(3)
     metrics = {
         'reward_forward': zero,
+        'reward_jump': zero,
         'reward_ctrl': zero,
         'reward_healthy': zero,
     }
@@ -101,7 +102,9 @@ class Walker2d(brax_env.Env):
     com_before = jp.sum(pos_before * self.mass, axis=0) / jp.sum(self.mass)
     com_after = jp.sum(pos_after * self.mass, axis=0) / jp.sum(self.mass)
     x_velocity = (com_after[0] - com_before[0]) / self.sys.config.dt
+    z_velocity = (com_after[2] - com_before[2]) / self.sys.config.dt
     forward_reward = self._forward_reward_weight * x_velocity
+    jump_reward = self._forward_reward_weight * jnp.abs(z_velocity)
 
     min_z, max_z = self._healthy_z_range
     is_healthy = jp.where(qp.pos[0, 2] < min_z, x=0.0, y=1.0)
@@ -111,7 +114,7 @@ class Walker2d(brax_env.Env):
     else:
       healthy_reward = self._healthy_reward * is_healthy
 
-    rewards = forward_reward + healthy_reward
+    rewards = forward_reward + healthy_reward + jump_reward
 
     ctrl_cost = self._ctrl_cost_weight * jp.sum(jp.square(action))
     costs = ctrl_cost
@@ -122,6 +125,7 @@ class Walker2d(brax_env.Env):
 
     state.metrics.update(
         reward_forward=forward_reward,
+        reward_jump=jump_reward,
         reward_ctrl=-ctrl_cost,
         reward_healthy=healthy_reward)
     return state.replace(qp=qp, obs=obs, reward=reward, done=done)
