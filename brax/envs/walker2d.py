@@ -104,7 +104,7 @@ class Walker2d(brax_env.Env):
     x_velocity = (com_after[0] - com_before[0]) / self.sys.config.dt
     z_velocity = (com_after[2] - com_before[2]) / self.sys.config.dt
     forward_reward = self._forward_reward_weight * x_velocity
-    jump_reward = self._forward_reward_weight * jnp.abs(z_velocity)
+    jump_reward = self._forward_reward_weight * jp.abs(z_velocity)
 
     min_z, max_z = self._healthy_z_range
     is_healthy = jp.where(qp.pos[0, 2] < min_z, x=0.0, y=1.0)
