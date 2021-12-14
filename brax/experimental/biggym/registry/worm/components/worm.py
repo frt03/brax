@@ -13,7 +13,9 @@
 # limitations under the License.
 
 """Procedural worm."""
+# pylint:disable=unused-import
 from brax.experimental.composer.components.ant import DEFAULT_OBSERVERS
+from brax.experimental.composer.components.pro_ant import get_specs
 
 def generate_worm_config_with_n_torso(n):
   assert n >= 2
