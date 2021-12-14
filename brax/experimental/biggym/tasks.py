@@ -33,7 +33,7 @@ def race(component: str, pos: Tuple[float] = (0, 0, 0), **component_params):
                   run=dict(
                       reward_type=reward_functions.state_reward,
                       obs=lambda x: so('body', 'vel', x['root'], indices=(0,)),
-                      scale=-1,
+                      # scale=-1,
                   )),
           ),),
       global_options=dict(dt=0.02, substeps=16),
