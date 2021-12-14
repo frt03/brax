@@ -46,8 +46,8 @@ def race_ma(component: str,
             **component_params):
   """Two agents racing."""
   opponent_params = opponent_params or {}
-  agent1_config = race(component, pos=(0, 1.5, 0), **component_params)
-  agent2_config = race(opponent, pos=(0, -1.5, 0), **opponent_params)
+  agent1_config = race(component, pos=(0, 2.5, 0), **component_params)
+  agent2_config = race(opponent, pos=(0, -2.5, 0), **opponent_params)
   agent1_config['components']['agent2'] = agent2_config['components']['agent1']
   agent1_config['agent_groups'] = {
       k: dict(reward_agents=(k,)) for k in ['agent1', 'agent2']
