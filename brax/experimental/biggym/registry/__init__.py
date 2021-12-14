@@ -16,9 +16,10 @@
 
 # keep alphabetical ordering
 REGISTRIES = [
+    'ant',
     'jump',
     'proant',
-    'ant',
+    'worm',
 ]
 
 
