@@ -19,7 +19,7 @@ from jax import numpy as jnp
 
 def generate_centipede_config_with_n_torso(n):
   assert n >= 2
-  assert n == 3  # TODO: debug n > 3
+  # assert n == 3  # TODO: debug n > 3
   """Generate info for n-torso centipede."""
 
   def template_torso(theta, ind):
@@ -183,7 +183,7 @@ def generate_centipede_config_with_n_torso(n):
         stiffness: 5000.0
         angular_damping: 35
         angle_limit {{ min: -20.0 max: 20.0 }}
-        rotation {{ y: -90 z: 60 }}
+        rotation {{ y: -90 z: 0.0 }}
         reference_rotation {{ y: 0.0 }}
       }}
       actuators {{
