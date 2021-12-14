@@ -19,7 +19,7 @@ REGISTRIES = [
     'ant',
     'jump',
     'proant',
-    # 'worm',
+    'worm',
 ]
 
 
