@@ -56,7 +56,7 @@ def generate_worm_config_with_n_torso(n):
       actuators {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}"
         joint: "torso_{str(ind)}_torso_{str(ind+1)}"
-        strength: 300.0
+        strength: 60.0
         torque {{}}
       }}
       joints {{
@@ -74,7 +74,7 @@ def generate_worm_config_with_n_torso(n):
       actuators {{
         name: "torso_{str(ind)}_torso_{str(ind+1)}_updown"
         joint: "torso_{str(ind)}_torso_{str(ind+1)}_updown"
-        strength: 300.0
+        strength: 60.0
         torque {{}}
       }}
       """
