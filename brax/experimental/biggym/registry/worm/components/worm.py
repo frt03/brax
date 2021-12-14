@@ -49,8 +49,8 @@ def generate_worm_config_with_n_torso(n):
         child: "torso_{str(ind+1)}"
         stiffness: 5000.0
         angular_damping: 35
-        angle_limit {{ min: -20.0 max: 20.0 }}
-        rotation {{ y: -90 z: 60 }}
+        angle_limit {{ min: -60.0 max: 60.0 }}
+        rotation {{ y: -90 z: 0.0 }}
         reference_rotation {{ y: 0.0 }}
       }}
       actuators {{
@@ -67,7 +67,7 @@ def generate_worm_config_with_n_torso(n):
         child: "torso_{str(ind+1)}"
         stiffness: 5000.0
         angular_damping: 35
-        angle_limit {{ min: -10.0 max: 30.0 }}
+        angle_limit {{ min: -60.0 max: 60.0 }}
         rotation {{ y: 0.0 z: 90.0 }}
         reference_rotation {{ y: 0.0 }}
       }}
@@ -92,7 +92,7 @@ def generate_worm_config_with_n_torso(n):
       base_config += joint_i
   return base_config, collides
 
-def get_specs(num_torso: int = 3):
+def get_specs(num_torso: int = 6):
   message_str, collides = generate_worm_config_with_n_torso(num_torso)
   return dict(
       message_str=message_str,
