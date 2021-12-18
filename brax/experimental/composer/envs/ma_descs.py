@@ -160,12 +160,12 @@ def get_ring_components(name: str = 'ring',
 def add_sumo(
     env_desc: Dict[str, Any],
     centering_scale: float = 1.,
-    control_scale: float = 0.1,
-    draw_scale: float = 0.,
-    knocking_scale: float = 1.,
-    opp_scale: float = 1.,
-    ring_size: float = 3.,
-    win_bonus: float = 1.,
+    control_scale: float = 1.,
+    draw_scale: float = 1.,
+    knocking_scale: float = 0.1,
+    opp_scale: float = 100.,
+    ring_size: float = 2.,
+    win_bonus: float = 100.,
 ):
   """Add a sumo task."""
   agents = sorted(env_desc['components'])
@@ -325,7 +325,7 @@ def create_desc(main_agent: str = 'ant',
                 other_agent_params: Dict[str, Any] = None,
                 num_agents: int = 2,
                 task: str = 'follow',
-                init_r: float = 2.,
+                init_r: float = 1.,
                 **kwargs):
   """Creat env_desc."""
   if main_agent_params or other_agent_params:
