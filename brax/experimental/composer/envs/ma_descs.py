@@ -162,7 +162,7 @@ def add_sumo(
     centering_scale: float = 1.,
     control_scale: float = 0.,
     draw_scale: float = 0.1,
-    knocking_scale: float = 1.,
+    knocking_scale: float = 10.,
     opp_scale: float = 100.,
     ring_size: float = 2.,
     win_bonus: float = 100.,
